@@ -28,6 +28,7 @@ private:
 	// calculators / options
 	// towards goal
 	// towards player
+	void towardsPlayer();
 	// towards wall
 	void onCarHitBall(std::string eventName);
 	void onWorldHitBall(std::string eventName);

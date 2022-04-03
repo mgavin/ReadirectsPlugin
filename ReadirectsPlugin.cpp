@@ -1,9 +1,11 @@
 #include "ReadirectsPlugin.h"
+#include "utils/parser.h"
 
 BAKKESMOD_PLUGIN(ReadirectsPlugin,
 								 "Readirects Plugin",
 								 plugin_version,
 								 PLUGINTYPE_FREEPLAY)
+bool readirectsEnabled = false;
 
 void ReadirectsPlugin::onLoad() {
 	// set options
@@ -37,6 +39,59 @@ void ReadirectsPlugin::onLoad() {
 														2944,
 														true);*/
 	// cvarManager->registerCvar("readirects_goal_cycle_option");
+
+	cvarManager
+		->registerCvar("readirects_enabled",
+									 "0",
+									 "Enable ReadirectsPlugin",
+									 true,
+									 true,
+									 0,
+									 true,
+									 1)
+		.addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
+			readirectsEnabled = cvar.getBoolValue();
+		});
+	cvarManager->registerCvar("readirects_towards_goal",
+														"0",
+														"Enable ball redirecting towards goal",
+														false,
+														true,
+														0,
+														true,
+														1);
+	cvarManager->registerCvar("readirects_towards_wall",
+														"0",
+														"Enable ball redirecting towards wall",
+														false,
+														true,
+														0,
+														true,
+														1);
+	cvarManager->registerCvar("readirects_towards_corner",
+														"0",
+														"Enable ball redirecting towards corner",
+														false,
+														true,
+														0,
+														true,
+														1);
+	cvarManager->registerCvar("readirects_towards_ceiling",
+														"0",
+														"Enable ball redirecting towards ceiling",
+														false,
+														true,
+														0,
+														true,
+														1);
+	cvarManager->registerCvar("readirects_towards_car",
+														"0",
+														"Enable ball redirecting towards car",
+														false,
+														true,
+														0,
+														true,
+														1);
 
 	// to keep a count of how many times the ball's hit by car
 	gameWrapper->HookEventPost(
@@ -103,12 +158,15 @@ void ReadirectsPlugin::onWorldHitBall(std::string eventName) {
 }
 
 void ReadirectsPlugin::onGameTick(std::string eventName) {
+	if (!readirectsEnabled) {
+		return;
+	}
 	// using this for a Timer function
 	// assume game physics engine ticks at 120x per second
 	// according to
 	// https://discord.com/channels/862068148328857700/862081441080410143/934679289167761428
 	// I assume so because I heard once that the physics engine ticks at 120/s ...
-	//                                                  :\
+	//                                                                   :\
   //so ((number of seconds) x 120)-- each tick;
 	if (_launchBallTimer <= 0) {
 		cvarManager->log("Timer ticked");
@@ -122,4 +180,43 @@ void ReadirectsPlugin::onGameTick(std::string eventName) {
 	} else {
 		_launchBallTimer--;
 	}
+}
+
+void ReadirectsPlugin::towardsPlayer() {
+	ServerWrapper training = gameWrapper->GetGameEventAsServer();
+
+	if (training.GetGameCar().IsNull() || training.GetBall().IsNull())
+		return;
+
+	Vector playerPosition = training.GetGameCar().GetLocation();
+	Vector ballPosition		= training.GetBall().GetLocation();
+	Vector playerVelocity = training.GetGameCar().GetVelocity();
+
+	float ballSpeed = cvarManager->getCvar("redirect_shot_speed").getIntValue();
+	float offset_z = cvarManager->getCvar("redirect_pass_offset_z").getIntValue();
+
+	bool predict = cvarManager->getCvar("redirect_pass_predict").getBoolValue();
+
+	float predictMultiplierX =
+		cvarManager->getCvar("redirect_predict_multiplier_x").getFloatValue();
+	float predictMultiplierY =
+		cvarManager->getCvar("redirect_predict_multiplier_y").getFloatValue();
+
+	bool onGround = cvarManager->getCvar("redirect_on_ground").getBoolValue();
+
+	int		 offsetX	 = cvarManager->getCvar("redirect_pass_offset").getIntValue();
+	int		 offsetY	 = cvarManager->getCvar("redirect_pass_offset").getIntValue();
+	int		 offsetZ	 = random(offset_z / 3, offset_z);
+	Vector offsetVec = Vector(offsetX, offsetY, offsetZ);
+
+	Vector velMultiplied;
+	if (predict)
+		velMultiplied =
+			playerVelocity * Vector(predictMultiplierX, predictMultiplierY, 1);
+	offsetVec = offsetVec + velMultiplied;
+	Vector shotData =
+		training.GenerateShot(ballPosition, playerPosition + offsetVec, ballSpeed);
+	if (onGround)
+		shotData.Z = 0;
+	training.GetBall().SetVelocity(shotData);
 }

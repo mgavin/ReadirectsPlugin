@@ -114,5 +114,6 @@
   <ItemGroup>
     <None Include="settings\launchball.set" />
     <None Include=".clang-format" />
+    <None Include="update_version.ps1" />
   </ItemGroup>
 </Project>
