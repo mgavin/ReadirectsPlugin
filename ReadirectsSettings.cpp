@@ -112,55 +112,51 @@ void ReadirectsPlugin::RenderSettings() {
 	ImGuiTreeNodeFlags ch = ImGuiTreeNodeFlags_Framed |
 													ImGuiTreeNodeFlags_NoAutoOpenOnLog |
 													ImGuiTreeNodeFlags_DefaultOpen;
-	if (ImGui::CollapsingHeader("Towards Goal Settings", ch)) {
-		settings_ids[0] = ImGui::GetItemID();
-		addRangeSlider("goal_shotspeed", "Towards Goal Shot Speed", 0, 50);
-		addRangeSlider("goal_sideoffset", "Goal Side Offset", 0, 50);
-		addRangeSlider("goal_heightoffset", "Goal Height Offset", 0, 50);
-		addRangeSlider("goal_addedspin", "Wall Added Spin", 0, 50);
+	if (ImGui::CollapsingHeader("Towards Goal Settings")) {
 		addCheckbox("readirects_goal_alternating",
 								"Target Alternating Goals",
 								"Instead of targetting goal in front of car, they alternate");
+		addRangeSlider("goal_shotspeed", "Towards Goal Shot Speed", 0, 50);
+		addRangeSlider("goal_sideoffset", "Goal Side Offset", 0, 50);
+		addRangeSlider("goal_heightoffset", "Goal Height Offset", 0, 50);
+		addRangeSlider("goal_addedspin", "Goal Added Spin", 0, 50);
 	}
-	if (ImGui::CollapsingHeader("Towards Wall Settings", ch)) {
-		settings_ids[1] = ImGui::GetItemID();
+	if (settings_ids[0] == 0)
+		settings_ids[0] = ImGui::GetItemID();
+	if (ImGui::CollapsingHeader("Towards Wall Settings")) {
 		addRangeSlider("wall_shotspeed", "Towards Wall Shot Speed", 0, 50);
 		addRangeSlider("wall_sideoffset", "Wall Side Offset", 0, 50);
 		addRangeSlider("wall_heightoffset", "Wall Height Offset", 0, 50);
 		addRangeSlider("wall_addedspin", "Wall Added Spin", 0, 50);
 	}
-	if (ImGui::CollapsingHeader("Towards Corner Settings", ch)) {
-		settings_ids[2] = ImGui::GetItemID();
+	if (settings_ids[1] == 0)
+		settings_ids[1] = ImGui::GetItemID();
+	if (ImGui::CollapsingHeader("Towards Corner Settings")) {
 		addRangeSlider("corner_shotspeed", "Towards Corner Shot Speed", 0, 50);
 		addRangeSlider("corner_sideoffset", "Corner Side Offset", 0, 50);
 		addRangeSlider("corner_heightoffset", "Corner Height Offset", 0, 50);
 		addRangeSlider("corner_addedspin", "Corner Added Spin", 0, 50);
 	}
-	if (ImGui::CollapsingHeader("Towards Ceiling Settings", ch)) {
-		settings_ids[3] = ImGui::GetItemID();
+	if (settings_ids[2] == 0)
+		settings_ids[2] = ImGui::GetItemID();
+	if (ImGui::CollapsingHeader("Towards Ceiling Settings")) {
 		addRangeSlider("ceiling_shotspeed", "Towards Ceiling Shot Speed", 0, 50);
 		addRangeSlider("ceiling_sideoffset", "Ceiling Side Offset", 0, 50);
 		addRangeSlider("ceiling_heightoffset", "Ceiling Height Offset", 0, 50);
 		addRangeSlider("ceiling_addedspin", "Ceiling Added Spin", 0, 50);
 	}
-	if (ImGui::CollapsingHeader("Towards Car Settings", ch)) {
-		settings_ids[4] = ImGui::GetItemID();
+	if (settings_ids[3] == 0)
+		settings_ids[3] = ImGui::GetItemID();
+	if (ImGui::CollapsingHeader("Towards Car Settings")) {
 		addRangeSlider("car_shotspeed", "Towards Car Shot Speed", 0, 50);
 		addRangeSlider("car_sideoffset", "Car Side Offset", 0, 50);
 		addRangeSlider("car_heightoffset", "Car Height Offset", 0, 50);
 		addRangeSlider("car_addedspin", "Car Added Spin", 0, 50);
 	}
-	ImGui::TextUnformatted("Sample 3");
-
+	if (settings_ids[4] == 0)
+		settings_ids[4] = ImGui::GetItemID();
 	settings_storage = ImGui::GetStateStorage();
-	if (first_opening) {
-		if (settings_storage != NULL) {
-			for (auto id : settings_ids) {
-				settings_storage->SetInt(id, 0);
-			}
-		}
-		first_opening = false;
-	}
+
 	ImGui::EndChild();
 	/* END LEFT WINDOW */
 	ImGui::SameLine();
@@ -189,7 +185,7 @@ void ReadirectsPlugin::RenderSettings() {
 		"Randomize playlist?",
 		"Actions in the playlist will be executed randomly instead of in-order");
 
-	const char * items[] = {"action 1", "action 2", "action3"};
+	static const char * items[] = {"action 1", "action 2", "action 3"};
 	for (int n = 0; n < IM_ARRAYSIZE(items); ++n) {
 		const char * item = items[n];
 		ImGui::Selectable(item);
