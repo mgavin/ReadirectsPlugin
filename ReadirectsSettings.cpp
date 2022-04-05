@@ -4,7 +4,7 @@
 #include "imgui_internal.h"
 #include "imgui_rangeslider.h"
 
-ImGuiStorage*				 settings_storage;
+ImGuiStorage *			 settings_storage;
 std::vector<ImGuiID> settings_ids(5);
 
 std::string ReadirectsPlugin::GetPluginName() {
@@ -12,25 +12,26 @@ std::string ReadirectsPlugin::GetPluginName() {
 }
 
 void ReadirectsPlugin::SetImGuiContext(uintptr_t ctx) {
-	ImGui::SetCurrentContext(reinterpret_cast<ImGuiContext*>(ctx));
+	ImGui::SetCurrentContext(reinterpret_cast<ImGuiContext *>(ctx));
 }
 
 void ReadirectsPlugin::RenderSettings() {
-	auto addCheckbox =
-		[this](std::string cvarName, const char* chkboxText, const char* tooltip) {
-			CVarWrapper cvar = cvarManager->getCvar(cvarName);
-			if (!cvar)
-				return;
+	auto addCheckbox = [this](std::string	 cvarName,
+														const char * chkboxText,
+														const char * tooltip) {
+		CVarWrapper cvar = cvarManager->getCvar(cvarName);
+		if (!cvar)
+			return;
 
-			bool enabled = cvar.getBoolValue();
-			if (ImGui::Checkbox(chkboxText, &enabled)) {
-				cvar.setValue(enabled);
-			}
+		bool enabled = cvar.getBoolValue();
+		if (ImGui::Checkbox(chkboxText, &enabled)) {
+			cvar.setValue(enabled);
+		}
 
-			if (ImGui::IsItemHovered()) {
-				ImGui::SetTooltip(tooltip);
-			}
-		};
+		if (ImGui::IsItemHovered()) {
+			ImGui::SetTooltip(tooltip);
+		}
+	};
 
 	/* FIRST LINE */
 	ImGui::Spacing();
@@ -94,7 +95,7 @@ void ReadirectsPlugin::RenderSettings() {
 													 ImGui::GetContentRegionAvail().y),
 										false,
 										ImGuiWindowFlags_HorizontalScrollbar);
-	auto addRangeSlider = [this](std::string cvarSuffix, const char* label) {
+	auto addRangeSlider = [this](std::string cvarSuffix, const char * label) {
 		CVarWrapper cvar = cvarManager->getCvar("readirects_" + cvarSuffix);
 		if (!cvar)
 			return;
@@ -120,8 +121,8 @@ void ReadirectsPlugin::RenderSettings() {
 		settings_ids[0] = ImGui::GetItemID();
 	if (ImGui::CollapsingHeader("Towards Wall Settings")) {
 		addCheckbox("readirects_wall_alternating",
-								"Target Alternating Goals",
-								"Instead of targetting goal in front of car, they alternate");
+								"Target Alternating Walls",
+								"Instead of targetting wall in front of car, they alternate");
 		addRangeSlider("wall_shotspeed", "Towards Wall Shot Speed");
 		addRangeSlider("wall_sideoffset", "Wall Side Offset");
 		addRangeSlider("wall_heightoffset", "Wall Height Offset");
@@ -159,20 +160,50 @@ void ReadirectsPlugin::RenderSettings() {
 	/* END LEFT WINDOW */
 	ImGui::SameLine();
 	/* RIGHT WINDOW */
-	ImGui::BeginChild("ChildR",
-										ImVec2(ImGui::GetContentRegionAvail().x * 0.5f,
-													 ImGui::GetContentRegionAvail().y),
-										false,
-										ImGuiWindowFlags_HorizontalScrollbar);
+	ImGui::BeginChild(
+		"ChildR",
+		ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y),
+		false,
+		ImGuiWindowFlags_HorizontalScrollbar);
 	addCheckbox("readirects_enable_timer",
 							"Enable timer? ",
 							"Redirects the ball based on a timer");
+	ImGui::SameLine();
+	CVarWrapper timer_seconds = cvarManager->getCvar("readirects_timer_seconds");
+	if (!timer_seconds)
+		return;
+	int timer_value = timer_seconds.getIntValue();
+	ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+	ImGui::SliderInt(
+		"##Timer Seconds", &timer_value, 1, 60, "%d seconds between redirects");
+	timer_seconds.setValue(timer_value);
+
 	addCheckbox("readirects_enable_afternumballhits",
 							"Enable after # ball hits? ",
-							"Redirects the ball after a # of ball hits");
+							"Redirects the ball after a # of times car hits ball");
+	ImGui::SameLine();
+	CVarWrapper ball_hits = cvarManager->getCvar("readirects_numballhitscar");
+	if (!ball_hits)
+		return;
+	int ballhitcar_value = ball_hits.getIntValue();
+	ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+	ImGui::SliderInt("##Car Hits", &ballhitcar_value, 1, 10, "%d Ball Hit(s)");
+	ball_hits.setValue(ballhitcar_value);
+
 	addCheckbox("readirects_enable_afterballhitsground",
 							"Enable after ball hits ground # times? ",
 							"Redirects the ball when ball hits ground # times");
+	ImGui::SameLine();
+	CVarWrapper ground_hits =
+		cvarManager->getCvar("readirects_numballhitsground");
+	if (!ground_hits)
+		return;
+	int ballhitground_value = ground_hits.getIntValue();
+	ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+	ImGui::SliderInt(
+		"##Ground Hits", &ballhitground_value, 1, 25, "%d Ground Hit(s)");
+	ground_hits.setValue(ballhitground_value);
+
 	ImGui::AlignTextToFramePadding();
 	ImGui::Text("Bind exec playlist to button: ");
 	CVarWrapper btn = cvarManager->getCvar("readirects_shoot");
@@ -193,9 +224,9 @@ void ReadirectsPlugin::RenderSettings() {
 		ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y),
 		true,
 		ImGuiWindowFlags_HorizontalScrollbar);
-	static const char* items[] = {"action 1", "action 2", "action 3"};
+	static const char * items[] = {"action 1", "action 2", "action 3"};
 	for (int n = 0; n < IM_ARRAYSIZE(items); ++n) {
-		const char* item = items[n];
+		const char * item = items[n];
 		ImGui::Selectable(item);
 		if (ImGui::IsItemActive() && !ImGui::IsItemHovered()) {
 			int n_next = n + (ImGui::GetMouseDragDelta(0).y < 0.f ? -1 : 1);

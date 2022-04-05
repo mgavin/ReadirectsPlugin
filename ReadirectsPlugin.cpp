@@ -27,35 +27,35 @@ void ReadirectsPlugin::onLoad() {
 
   // towards goal settings
   cvarManager->registerCvar("readirects_goal_shotspeed",    "(0, 6000)", "Speed of shot directed towards goal", false, true, 0, true, 6000);
-  cvarManager->registerCvar("readirects_goal_sideoffset",   "(-2944, 2944)", "Side offset min of shot directed towards goal", false, true, -2944, true, 2944);
-  cvarManager->registerCvar("readirects_goal_heightoffset", "(0, 2044)", "Height above goal min of shot directed towards goal", false, true, 0, true, 2044);
-  cvarManager->registerCvar("readirects_goal_addedspin",    "(-6, 6)", "Added spin min of shot directed towards goal", false, true, -6, true, 6);
-  cvarManager->registerCvar("readirects_goal_alternating",      "0", "Target alternating goals each call",     false, true, 0, true, 1);
+  cvarManager->registerCvar("readirects_goal_sideoffset",   "(-2944, 2944)", "Side offset of shot directed towards goal", false, true, -2944, true, 2944);
+  cvarManager->registerCvar("readirects_goal_heightoffset", "(0, 2044)", "Height above goal of shot directed towards goal", false, true, 0, true, 2044);
+  cvarManager->registerCvar("readirects_goal_addedspin",    "(-6, 6)", "Added spin of shot directed towards goal", false, true, -6, true, 6);
+  cvarManager->registerCvar("readirects_goal_alternating",  "0", "Target alternating goals each call",     false, true, 0, true, 1);
 
   // towards wall settings
   cvarManager->registerCvar("readirects_wall_shotspeed",    "(0, 6000)", "Speed of shot directed towards wall", false, true, 0, true, 6000);
-  cvarManager->registerCvar("readirects_wall_sideoffset",   "(-3968, 3968)", "Side offset min of shot directed towards wall", false, true, -2944, true, 2944);
-  cvarManager->registerCvar("readirects_wall_heightoffset", "(0, 2044)", "Height above wall min of shot directed towards wall", false, true, 0, true, 2044);
-  cvarManager->registerCvar("readirects_wall_addedspin",    "(-6, 6)", "Added spin min of shot directed towards wall", false, true, -6, true, 6);
-  cvarManager->registerCvar("readirects_wall_alternating",      "0", "Target alternating walls each call",     false, true, 0, true, 1);
+  cvarManager->registerCvar("readirects_wall_sideoffset",   "(-3968, 3968)", "Side offset of shot directed towards wall", false, true, -2944, true, 2944);
+  cvarManager->registerCvar("readirects_wall_heightoffset", "(0, 2044)", "Height above wall of shot directed towards wall", false, true, 0, true, 2044);
+  cvarManager->registerCvar("readirects_wall_addedspin",    "(-6, 6)", "Added spin of shot directed towards wall", false, true, -6, true, 6);
+  cvarManager->registerCvar("readirects_wall_alternating",  "0", "Target alternating walls each call",     false, true, 0, true, 1);
 
   // towards corner settings
   cvarManager->registerCvar("readirects_corner_shotspeed",    "(0, 6000)", "Speed of shot directed towards corner", false, true, 0, true, 6000);
-  cvarManager->registerCvar("readirects_corner_sideoffset",   "(-814, 814)", "Side offset min of shot directed towards corner", false, true, -2944, true, 2944);
-  cvarManager->registerCvar("readirects_corner_heightoffset", "(0, 2044)", "Height above corner min of shot directed towards corner", false, true, 0, true, 2044);
-  cvarManager->registerCvar("readirects_corner_addedspin",    "(-6, 6)", "Added spin min of shot directed towards corner", false, true, -6, true, 6);
+  cvarManager->registerCvar("readirects_corner_sideoffset",   "(-814, 814)", "Side offset of shot directed towards corner", false, true, -2944, true, 2944);
+  cvarManager->registerCvar("readirects_corner_heightoffset", "(0, 2044)", "Height above corner of shot directed towards corner", false, true, 0, true, 2044);
+  cvarManager->registerCvar("readirects_corner_addedspin",    "(-6, 6)", "Added spin of shot directed towards corner", false, true, -6, true, 6);
 
   // towards ceiling settings
   cvarManager->registerCvar("readirects_ceiling_shotspeed",    "(0, 6000)", "Speed of shot directed towards ceiling", false, true, 0, true, 6000);
-  cvarManager->registerCvar("readirects_ceiling_sideoffset",   "(-2944, 2944)", "Side offset min of shot directed towards ceiling", false, true, -2944, true, 2944);
-  cvarManager->registerCvar("readirects_ceiling_heightoffset", "(0, 2044)", "Height above ceiling min of shot directed towards ceiling", false, true, 0, true, 2044);
-  cvarManager->registerCvar("readirects_ceiling_addedspin",    "(-6, 6)", "Added spin min of shot directed towards ceiling", false, true, -6, true, 6);
+  cvarManager->registerCvar("readirects_ceiling_sideoffset",   "(-2944, 2944)", "Side offset of shot directed towards ceiling", false, true, -2944, true, 2944);
+  cvarManager->registerCvar("readirects_ceiling_heightoffset", "(0, 2044)", "Height above ceiling of shot directed towards ceiling", false, true, 0, true, 2044);
+  cvarManager->registerCvar("readirects_ceiling_addedspin",    "(-6, 6)", "Added spin of shot directed towards ceiling", false, true, -6, true, 6);
 
   // towards car settings
   cvarManager->registerCvar("readirects_car_shotspeed",    "(0, 6000)", "Speed of shot directed towards car", false, true, 0, true, 6000);
-  cvarManager->registerCvar("readirects_car_sideoffset",   "(-2944, 2944)", "Side offset min of shot directed towards car", false, true, -2944, true, 2944);
-  cvarManager->registerCvar("readirects_car_heightoffset", "(0, 2044)", "Height above car min of shot directed towards car", false, true, 0, true, 2044);
-  cvarManager->registerCvar("readirects_car_addedspin",    "(-6, 6)", "Added spin min of shot directed towards car", false, true, -6, true, 6);
+  cvarManager->registerCvar("readirects_car_sideoffset",   "(-2944, 2944)", "Side offset of shot directed towards car", false, true, -2944, true, 2944);
+  cvarManager->registerCvar("readirects_car_heightoffset", "(0, 2044)", "Height above car of shot directed towards car", false, true, 0, true, 2044);
+  cvarManager->registerCvar("readirects_car_addedspin",    "(-6, 6)", "Added spin of shot directed towards car", false, true, -6, true, 6);
 
 	// clang-format on
 	cvarManager->registerCvar("readirects_enable_timer",
@@ -83,6 +83,32 @@ void ReadirectsPlugin::onLoad() {
 														0,
 														true,
 														1);
+	cvarManager->registerCvar("readirects_timer_seconds",
+														"1",
+														"Seconds between redirecting the ball",
+														false,
+														true,
+														1,
+														true,
+														60);
+	cvarManager->registerCvar(
+		"readirects_numballhitscar",
+		"0",
+		"Number of ball hits by car before redirecting the ball",
+		false,
+		true,
+		1,
+		true,
+		10);
+	cvarManager->registerCvar(
+		"readirects_numballhitsground",
+		"0",
+		"Number of ball hits by wall before redirecting the ball",
+		false,
+		true,
+		1,
+		true,
+		25);
 	/* JUST CONCEPTUALLY ENABLING/DISABLING OTHER CHECKBOXES
 	CVarWrapper ontimer = cvarManager->getCvar("readirects_enable_timer");
 	CVarWrapper afternumballhits =
@@ -148,9 +174,9 @@ void ReadirectsPlugin::onUnload() {
 	gameWrapper->UnhookEvent("Function TAGame.Car_TA.SetVehicleInput");
 }
 
-void ReadirectsPlugin::launchBall(std::shared_ptr<CVarManagerWrapper>& cvm,
-																	std::shared_ptr<GameWrapper>&				 gwm,
-																	std::vector<std::string>						 inp) {
+void ReadirectsPlugin::launchBall(std::shared_ptr<CVarManagerWrapper> & cvm,
+																	std::shared_ptr<GameWrapper> &				gwm,
+																	std::vector<std::string>							inp) {
 	if (!readirectsEnabled)
 		return;
 	//  main driver
@@ -207,7 +233,7 @@ void ReadirectsPlugin::onGameTick(std::string eventName) {
 	// according to
 	// https://discord.com/channels/862068148328857700/862081441080410143/934679289167761428
 	// I assume so because I heard once that the physics engine ticks at 120/s ...
-	//                                                                                                                                                                                                                                :\
+	//                                                                                                                                                                                                                                                    :\
   //so ((number of seconds) x 120)-- each tick;
 	if (_launchBallTimer <= 0) {
 		cvarManager->log("Timer ticked");
