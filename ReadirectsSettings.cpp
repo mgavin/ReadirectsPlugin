@@ -4,35 +4,33 @@
 #include "imgui_internal.h"
 #include "imgui_rangeslider.h"
 
-ImGuiStorage *			 settings_storage;
+ImGuiStorage*				 settings_storage;
 std::vector<ImGuiID> settings_ids(5);
-bool								 first_opening = true;
 
 std::string ReadirectsPlugin::GetPluginName() {
 	return "Readirects Plugin";
 }
 
 void ReadirectsPlugin::SetImGuiContext(uintptr_t ctx) {
-	ImGui::SetCurrentContext(reinterpret_cast<ImGuiContext *>(ctx));
+	ImGui::SetCurrentContext(reinterpret_cast<ImGuiContext*>(ctx));
 }
 
 void ReadirectsPlugin::RenderSettings() {
-	auto addCheckbox = [this](std::string	 cvarName,
-														const char * chkboxText,
-														const char * tooltip) {
-		CVarWrapper cvar = cvarManager->getCvar(cvarName);
-		if (!cvar)
-			return;
+	auto addCheckbox =
+		[this](std::string cvarName, const char* chkboxText, const char* tooltip) {
+			CVarWrapper cvar = cvarManager->getCvar(cvarName);
+			if (!cvar)
+				return;
 
-		bool enabled = cvar.getBoolValue();
-		if (ImGui::Checkbox(chkboxText, &enabled)) {
-			cvar.setValue(enabled);
-		}
+			bool enabled = cvar.getBoolValue();
+			if (ImGui::Checkbox(chkboxText, &enabled)) {
+				cvar.setValue(enabled);
+			}
 
-		if (ImGui::IsItemHovered()) {
-			ImGui::SetTooltip(tooltip);
-		}
-	};
+			if (ImGui::IsItemHovered()) {
+				ImGui::SetTooltip(tooltip);
+			}
+		};
 
 	/* FIRST LINE */
 	ImGui::Spacing();
@@ -96,20 +94,7 @@ void ReadirectsPlugin::RenderSettings() {
 													 ImGui::GetContentRegionAvail().y),
 										false,
 										ImGuiWindowFlags_HorizontalScrollbar);
-	auto addRangeSlider =
-		[this](std::string cvarSuffix, const char * label, int vmin, int vmax) {
-			CVarWrapper cvar_min =
-				cvarManager->getCvar("readirects_" + cvarSuffix + "_min");
-			CVarWrapper cvar_max =
-				cvarManager->getCvar("readirects_" + cvarSuffix + "_max");
-			if (!cvar_min && !cvar_max)
-				return;
-			int min = cvar_min.getIntValue(), max = cvar_max.getIntValue();
-			ImGui::RangeSliderInt(label, &min, &max, vmin, vmax);
-			cvar_min.setValue(min);
-			cvar_max.setValue(max);
-		};
-	auto addRangeSlider2 = [this](std::string cvarSuffix, const char * label) {
+	auto addRangeSlider = [this](std::string cvarSuffix, const char* label) {
 		CVarWrapper cvar = cvarManager->getCvar("readirects_" + cvarSuffix);
 		if (!cvar)
 			return;
@@ -122,49 +107,49 @@ void ReadirectsPlugin::RenderSettings() {
 			"(" + std::to_string(min) + ", " + std::to_string(max) + ")";
 		cvar.setValue(value);
 	};
-	ImGuiTreeNodeFlags ch = ImGuiTreeNodeFlags_Framed |
-													ImGuiTreeNodeFlags_NoAutoOpenOnLog |
-													ImGuiTreeNodeFlags_DefaultOpen;
 	if (ImGui::CollapsingHeader("Towards Goal Settings")) {
 		addCheckbox("readirects_goal_alternating",
 								"Target Alternating Goals",
 								"Instead of targetting goal in front of car, they alternate");
-		addRangeSlider2("goal_shotspeed", "Towards Goal Shot Speed");
-		addRangeSlider("goal_sideoffset", "Goal Side Offset", -2944, 2944);
-		addRangeSlider("goal_heightoffset", "Goal Height Offset", 0, 2044);
-		addRangeSlider("goal_addedspin", "Goal Added Spin", -6, 6);
+		addRangeSlider("goal_shotspeed", "Towards Goal Shot Speed");
+		addRangeSlider("goal_sideoffset", "Goal Side Offset");
+		addRangeSlider("goal_heightoffset", "Goal Height Offset");
+		addRangeSlider("goal_addedspin", "Goal Added Spin");
 	}
 	if (settings_ids[0] == 0)
 		settings_ids[0] = ImGui::GetItemID();
 	if (ImGui::CollapsingHeader("Towards Wall Settings")) {
-		addRangeSlider("wall_shotspeed", "Towards Wall Shot Speed", 0, 6000);
-		addRangeSlider("wall_sideoffset", "Wall Side Offset", -3968, 3968);
-		addRangeSlider("wall_heightoffset", "Wall Height Offset", 0, 2044);
-		addRangeSlider("wall_addedspin", "Wall Added Spin", -6, 6);
+		addCheckbox("readirects_wall_alternating",
+								"Target Alternating Goals",
+								"Instead of targetting goal in front of car, they alternate");
+		addRangeSlider("wall_shotspeed", "Towards Wall Shot Speed");
+		addRangeSlider("wall_sideoffset", "Wall Side Offset");
+		addRangeSlider("wall_heightoffset", "Wall Height Offset");
+		addRangeSlider("wall_addedspin", "Wall Added Spin");
 	}
 	if (settings_ids[1] == 0)
 		settings_ids[1] = ImGui::GetItemID();
 	if (ImGui::CollapsingHeader("Towards Corner Settings")) {
-		addRangeSlider("corner_shotspeed", "Towards Corner Shot Speed", 0, 6000);
-		addRangeSlider("corner_sideoffset", "Corner Side Offset", 0, 814);
-		addRangeSlider("corner_heightoffset", "Corner Height Offset", 0, 2044);
-		addRangeSlider("corner_addedspin", "Corner Added Spin", -6, 6);
+		addRangeSlider("corner_shotspeed", "Towards Corner Shot Speed");
+		addRangeSlider("corner_sideoffset", "Corner Side Offset");
+		addRangeSlider("corner_heightoffset", "Corner Height Offset");
+		addRangeSlider("corner_addedspin", "Corner Added Spin");
 	}
 	if (settings_ids[2] == 0)
 		settings_ids[2] = ImGui::GetItemID();
 	if (ImGui::CollapsingHeader("Towards Ceiling Settings")) {
-		addRangeSlider("ceiling_shotspeed", "Towards Ceiling Shot Speed", 0, 6000);
-		addRangeSlider("ceiling_sideoffset", "Ceiling Side Offset", 0, 50);
-		addRangeSlider("ceiling_heightoffset", "Ceiling Height Offset", 0, 2044);
-		addRangeSlider("ceiling_addedspin", "Ceiling Added Spin", -6, 6);
+		addRangeSlider("ceiling_shotspeed", "Towards Ceiling Shot Speed");
+		addRangeSlider("ceiling_sideoffset", "Ceiling Side Offset");
+		addRangeSlider("ceiling_heightoffset", "Ceiling Height Offset");
+		addRangeSlider("ceiling_addedspin", "Ceiling Added Spin");
 	}
 	if (settings_ids[3] == 0)
 		settings_ids[3] = ImGui::GetItemID();
 	if (ImGui::CollapsingHeader("Towards Car Settings")) {
-		addRangeSlider("car_shotspeed", "Towards Car Shot Speed", 0, 6000);
-		addRangeSlider("car_sideoffset", "Car Side Offset", 0, 50);
-		addRangeSlider("car_heightoffset", "Car Height Offset", 0, 50);
-		addRangeSlider("car_addedspin", "Car Added Spin", -6, 6);
+		addRangeSlider("car_shotspeed", "Towards Car Shot Speed");
+		addRangeSlider("car_sideoffset", "Car Side Offset");
+		addRangeSlider("car_heightoffset", "Car Height Offset");
+		addRangeSlider("car_addedspin", "Car Added Spin");
 	}
 	if (settings_ids[4] == 0)
 		settings_ids[4] = ImGui::GetItemID();
@@ -208,9 +193,9 @@ void ReadirectsPlugin::RenderSettings() {
 		ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y),
 		true,
 		ImGuiWindowFlags_HorizontalScrollbar);
-	static const char * items[] = {"action 1", "action 2", "action 3"};
+	static const char* items[] = {"action 1", "action 2", "action 3"};
 	for (int n = 0; n < IM_ARRAYSIZE(items); ++n) {
-		const char * item = items[n];
+		const char* item = items[n];
 		ImGui::Selectable(item);
 		if (ImGui::IsItemActive() && !ImGui::IsItemHovered()) {
 			int n_next = n + (ImGui::GetMouseDragDelta(0).y < 0.f ? -1 : 1);
