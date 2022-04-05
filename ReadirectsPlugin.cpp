@@ -1,4 +1,6 @@
 #include "ReadirectsPlugin.h"
+#include "bakkesmod/wrappers/GameObject/BallWrapper.h"
+#include "bakkesmod/wrappers/GameObject/CarWrapper.h"
 #include "utils/parser.h"
 
 BAKKESMOD_PLUGIN(ReadirectsPlugin,
@@ -40,59 +42,69 @@ void ReadirectsPlugin::onLoad() {
 														true);*/
 	// cvarManager->registerCvar("readirects_goal_cycle_option");
 
-	cvarManager
-		->registerCvar("readirects_enabled",
-									 "0",
-									 "Enable ReadirectsPlugin",
-									 true,
-									 true,
-									 0,
-									 true,
-									 1)
-		.addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
-			readirectsEnabled = cvar.getBoolValue();
-		});
-	cvarManager->registerCvar("readirects_towards_goal",
-														"0",
-														"Enable ball redirecting towards goal",
-														false,
-														true,
-														0,
-														true,
-														1);
-	cvarManager->registerCvar("readirects_towards_wall",
-														"0",
-														"Enable ball redirecting towards wall",
-														false,
-														true,
-														0,
-														true,
-														1);
-	cvarManager->registerCvar("readirects_towards_corner",
-														"0",
-														"Enable ball redirecting towards corner",
-														false,
-														true,
-														0,
-														true,
-														1);
-	cvarManager->registerCvar("readirects_towards_ceiling",
-														"0",
-														"Enable ball redirecting towards ceiling",
-														false,
-														true,
-														0,
-														true,
-														1);
-	cvarManager->registerCvar("readirects_towards_car",
-														"0",
-														"Enable ball redirecting towards car",
-														false,
-														true,
-														0,
-														true,
-														1);
+	// clang-format off
+  cvarManager->registerCvar("readirects_enabled", "0", "Enable ReadirectsPlugin", true, true, 0, true, 1)
+    .addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
+      readirectsEnabled = cvar.getBoolValue();
+    });
+  cvarManager->registerCvar("readirects_towards_goal",   "0", "Enable ball redirecting towards goal",    false, true, 0, true, 1);
+  cvarManager->registerCvar("readirects_towards_wall",   "0", "Enable ball redirecting towards wall",    false, true, 0, true, 1);
+  cvarManager->registerCvar("readirects_towards_corner", "0", "Enable ball redirecting towards corner",  false, true, 0, true, 1);
+  cvarManager->registerCvar("readirects_towards_ceiling","0", "Enable ball redirecting towards ceiling", false, true, 0, true, 1);
+  cvarManager->registerCvar("readirects_towards_car",    "0", "Enable ball redirecting towards car",     false, true, 0, true, 1);
 
+  // towards goal settings
+  cvarManager->registerCvar("readirects_goal_shotspeed_min",    "0", "Minimum speed of shot directed towards goal", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_goal_shotspeed_max",    "0", "Maximum speed of shot directed towards goal", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_goal_sideoffset_min",   "0", "Side offset min of shot directed towards goal", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_goal_sideoffset_max",   "0", "Side offset max of shot directed towards goal", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_goal_heightoffset_min", "0", "Height above goal min of shot directed towards goal", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_goal_heightoffset_max", "0", "Height above goal max of shot directed towards goal", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_goal_addedspin_min",    "0", "Added spin min of shot directed towards goal", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_goal_addedspin_max",    "0", "Added spin max of shot directed towards goal", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_goal_alternating",      "0", "Target alternating goals each call",     false, true, 0, true, 1);
+
+  // towards wall settings
+  cvarManager->registerCvar("readirects_wall_shotspeed_min",    "0", "Minimum speed of shot directed towards wall", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_wall_shotspeed_max",    "0", "Maximum speed of shot directed towards wall", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_wall_sideoffset_min",   "0", "Side offset min of shot directed towards wall", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_wall_sideoffset_max",   "0", "Side offset max of shot directed towards wall", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_wall_heightoffset_min", "0", "Height above wall min of shot directed towards wall", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_wall_heightoffset_max", "0", "Height above wall max of shot directed towards wall", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_wall_addedspin_min",    "0", "Added spin min of shot directed towards wall", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_wall_addedspin_max",    "0", "Added spin max of shot directed towards wall", false, true, 0, true, 50);
+
+  // towards corner settings
+  cvarManager->registerCvar("readirects_corner_shotspeed_min",    "0", "Minimum speed of shot directed towards corner", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_corner_shotspeed_max",    "0", "Maximum speed of shot directed towards corner", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_corner_sideoffset_min",   "0", "Side offset min of shot directed towards corner", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_corner_sideoffset_max",   "0", "Side offset max of shot directed towards corner", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_corner_heightoffset_min", "0", "Height above corner min of shot directed towards corner", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_corner_heightoffset_max", "0", "Height above corner max of shot directed towards corner", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_corner_addedspin_min",    "0", "Added spin min of shot directed towards corner", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_corner_addedspin_max",    "0", "Added spin max of shot directed towards corner", false, true, 0, true, 50);
+
+  // towards ceiling settings
+  cvarManager->registerCvar("readirects_ceiling_shotspeed_min",    "0", "Minimum speed of shot directed towards ceiling", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_ceiling_shotspeed_max",    "0", "Maximum speed of shot directed towards ceiling", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_ceiling_sideoffset_min",   "0", "Side offset min of shot directed towards ceiling", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_ceiling_sideoffset_max",   "0", "Side offset max of shot directed towards ceiling", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_ceiling_heightoffset_min", "0", "Height above ceiling min of shot directed towards ceiling", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_ceiling_heightoffset_max", "0", "Height above ceiling max of shot directed towards ceiling", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_ceiling_addedspin_min",    "0", "Added spin min of shot directed towards ceiling", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_ceiling_addedspin_max",    "0", "Added spin max of shot directed towards ceiling", false, true, 0, true, 50);
+
+  // towards car settings
+  cvarManager->registerCvar("readirects_car_shotspeed_min",    "0", "Minimum speed of shot directed towards car", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_car_shotspeed_max",    "0", "Maximum speed of shot directed towards car", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_car_sideoffset_min",   "0", "Side offset min of shot directed towards car", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_car_sideoffset_max",   "0", "Side offset max of shot directed towards car", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_car_heightoffset_min", "0", "Height above car min of shot directed towards car", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_car_heightoffset_max", "0", "Height above car max of shot directed towards car", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_car_addedspin_min",    "0", "Added spin min of shot directed towards car", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_car_addedspin_max",    "0", "Added spin max of shot directed towards car", false, true, 0, true, 50);
+
+	// clang-format on
 	// to keep a count of how many times the ball's hit by car
 	gameWrapper->HookEventPost(
 		"Function TAGame.Car_TA.EventHitBall",
@@ -166,7 +178,7 @@ void ReadirectsPlugin::onGameTick(std::string eventName) {
 	// according to
 	// https://discord.com/channels/862068148328857700/862081441080410143/934679289167761428
 	// I assume so because I heard once that the physics engine ticks at 120/s ...
-	//                                                                   :\
+	//                                                                                            :\
   //so ((number of seconds) x 120)-- each tick;
 	if (_launchBallTimer <= 0) {
 		cvarManager->log("Timer ticked");
@@ -183,6 +195,7 @@ void ReadirectsPlugin::onGameTick(std::string eventName) {
 }
 
 void ReadirectsPlugin::towardsPlayer() {
+	// taken from the redirect plugin that comes with bakkesmod by default
 	ServerWrapper training = gameWrapper->GetGameEventAsServer();
 
 	if (training.GetGameCar().IsNull() || training.GetBall().IsNull())
