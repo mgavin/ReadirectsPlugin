@@ -11,42 +11,14 @@ bool readirectsEnabled = false;
 
 void ReadirectsPlugin::onLoad() {
 	// set options
-	// redirect towards goal options
-	/*cvarManager->registerCvar("readirects_ballspeed",
-														"700",
-														"How fast the ball will redirect when launched",
-														true,
-														true,
-														0,
-														true,
-														6000,
-														true);
-	cvarManager->registerCvar(
-		"readirects_goal_added_height",
-		"(0, 1400)",
-		"When redirected towards goal, the added height above",
-		true,
-		true,
-		-600,
-		true,
-		1402,
-		true);
-	cvarManager->registerCvar("readirects_goal_side_offset",
-														"(-2944, 2944)",
-														"Added side distance above goal",
-														true,
-														true,
-														-2944,
-														true,
-														2944,
-														true);*/
-	// cvarManager->registerCvar("readirects_goal_cycle_option");
 
 	// clang-format off
+  // option to enable plugin
   cvarManager->registerCvar("readirects_enabled", "0", "Enable ReadirectsPlugin", true, true, 0, true, 1)
     .addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
       readirectsEnabled = cvar.getBoolValue();
     });
+  // options for where to redirect the ball
   cvarManager->registerCvar("readirects_towards_goal",   "0", "Enable ball redirecting towards goal",    false, true, 0, true, 1);
   cvarManager->registerCvar("readirects_towards_wall",   "0", "Enable ball redirecting towards wall",    false, true, 0, true, 1);
   cvarManager->registerCvar("readirects_towards_corner", "0", "Enable ball redirecting towards corner",  false, true, 0, true, 1);
@@ -104,6 +76,59 @@ void ReadirectsPlugin::onLoad() {
   cvarManager->registerCvar("readirects_car_addedspin_min",    "0", "Added spin min of shot directed towards car", false, true, 0, true, 50);
   cvarManager->registerCvar("readirects_car_addedspin_max",    "0", "Added spin max of shot directed towards car", false, true, 0, true, 50);
 
+	// clang-format on
+	cvarManager->registerCvar("readirects_enable_timer",
+														"0",
+														"Run playlist on a timer",
+														false,
+														true,
+														0,
+														true,
+														1);
+
+	cvarManager->registerCvar("readirects_enable_afternumballhits",
+														"0",
+														"Run playlist after number of ball hits",
+														false,
+														true,
+														0,
+														true,
+														1);
+	cvarManager->registerCvar("readirects_enable_afterballhitsground",
+														"0",
+														"Run playlist when ball hits ground",
+														false,
+														true,
+														0,
+														true,
+														1);
+	/* JUST CONCEPTUALLY ENABLING/DISABLING OTHER CHECKBOXES
+	CVarWrapper ontimer = cvarManager->getCvar("readirects_enable_timer");
+	CVarWrapper afternumballhits =
+		cvarManager->getCvar("readirects_enable_afternumballhits");
+	CVarWrapper afterballhitsground =
+		cvarManager->getCvar("readirects_enable_afterballhitsground");
+	ontimer.addOnValueChanged([&, this](std::string oldValue, CVarWrapper cvar) {
+		CVarWrapper anbh =
+			cvarManager->getCvar("readirects_enable_afternumballhits");
+		if (!anbh)
+			return;
+		CVarWrapper abhg =
+			cvarManager->getCvar("readirects_enable_afterballhitsground");
+		if (!anbh)
+			return;
+		anbh.setValue(0);
+		abhg.setValue(0);
+	});
+	*/
+	cvarManager->registerCvar("readirects_enable_randomizeplaylist",
+														"0",
+														"Randomly execute playlist?",
+														false,
+														true,
+														0,
+														true,
+														1);
 	// clang-format on
 	// to keep a count of how many times the ball's hit by car
 	gameWrapper->HookEventPost(
@@ -178,7 +203,7 @@ void ReadirectsPlugin::onGameTick(std::string eventName) {
 	// according to
 	// https://discord.com/channels/862068148328857700/862081441080410143/934679289167761428
 	// I assume so because I heard once that the physics engine ticks at 120/s ...
-	//                                                                                            :\
+	//                                                                                                                                                :\
   //so ((number of seconds) x 120)-- each tick;
 	if (_launchBallTimer <= 0) {
 		cvarManager->log("Timer ticked");

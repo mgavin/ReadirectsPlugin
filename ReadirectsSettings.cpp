@@ -173,7 +173,35 @@ void ReadirectsPlugin::RenderSettings() {
 	addCheckbox("readirects_enable_timer",
 							"Enable timer? ",
 							"Redirects the ball based on a timer");
-	ImGui::TextUnformatted("Sample 5");
+	addCheckbox("readirects_enable_afternumballhits",
+							"Enable after # ball hits? ",
+							"Redirects the ball after a # of ball hits");
+	addCheckbox("readirects_enable_afterballhitsground",
+							"Enable after ball hits ground # times? ",
+							"Redirects the ball when ball hits ground # times");
+	ImGui::Spacing();
+	ImGui::Spacing();
+	ImGui::AlignTextToFramePadding();
+	ImGui::TextUnformatted("Playlist");
+	ImGui::SameLine(100);
+	addCheckbox(
+		"readirects_enable_randomizeplaylist",
+		"Randomize playlist?",
+		"Actions in the playlist will be executed randomly instead of in-order");
+
+	const char * items[] = {"action 1", "action 2", "action3"};
+	for (int n = 0; n < IM_ARRAYSIZE(items); ++n) {
+		const char * item = items[n];
+		ImGui::Selectable(item);
+		if (ImGui::IsItemActive() && !ImGui::IsItemHovered()) {
+			int n_next = n + (ImGui::GetMouseDragDelta(0).y < 0.f ? -1 : 1);
+			if (n_next >= 0 && n_next < IM_ARRAYSIZE(items)) {
+				items[n]			= items[n_next];
+				items[n_next] = item;
+				ImGui::ResetMouseDragDelta();
+			}
+		}
+	}
 	ImGui::EndChild();
 	/* END RIGHT WINDOW */
 }
