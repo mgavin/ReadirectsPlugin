@@ -17,7 +17,9 @@ public:
 	virtual void onUnload();
 
 	// primary driver
-	void launchBall();
+	void launchBall(std::shared_ptr<CVarManagerWrapper> &,
+									std::shared_ptr<GameWrapper> &,
+									std::vector<std::string>);
 
 	// settings
 	std::string GetPluginName() override;

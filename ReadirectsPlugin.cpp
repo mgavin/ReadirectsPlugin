@@ -26,25 +26,25 @@ void ReadirectsPlugin::onLoad() {
   cvarManager->registerCvar("readirects_towards_car",    "0", "Enable ball redirecting towards car",     false, true, 0, true, 1);
 
   // towards goal settings
-  cvarManager->registerCvar("readirects_goal_shotspeed_min",    "0", "Minimum speed of shot directed towards goal", false, true, 0, true, 50);
-  cvarManager->registerCvar("readirects_goal_shotspeed_max",    "0", "Maximum speed of shot directed towards goal", false, true, 0, true, 50);
-  cvarManager->registerCvar("readirects_goal_sideoffset_min",   "0", "Side offset min of shot directed towards goal", false, true, 0, true, 50);
-  cvarManager->registerCvar("readirects_goal_sideoffset_max",   "0", "Side offset max of shot directed towards goal", false, true, 0, true, 50);
-  cvarManager->registerCvar("readirects_goal_heightoffset_min", "0", "Height above goal min of shot directed towards goal", false, true, 0, true, 50);
-  cvarManager->registerCvar("readirects_goal_heightoffset_max", "0", "Height above goal max of shot directed towards goal", false, true, 0, true, 50);
-  cvarManager->registerCvar("readirects_goal_addedspin_min",    "0", "Added spin min of shot directed towards goal", false, true, 0, true, 50);
-  cvarManager->registerCvar("readirects_goal_addedspin_max",    "0", "Added spin max of shot directed towards goal", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_goal_shotspeed",    "(0, 6000)", "Speed of shot directed towards goal", false, true, 0, true, 6000);
+  cvarManager->registerCvar("readirects_goal_sideoffset_min",   "0", "Side offset min of shot directed towards goal", false, true, -2944, true, 2944);
+  cvarManager->registerCvar("readirects_goal_sideoffset_max",   "0", "Side offset max of shot directed towards goal", false, true, -2944, true, 2944);
+  cvarManager->registerCvar("readirects_goal_heightoffset_min", "0", "Height above goal min of shot directed towards goal", false, true, 0, true, 2044);
+  cvarManager->registerCvar("readirects_goal_heightoffset_max", "0", "Height above goal max of shot directed towards goal", false, true, 0, true, 2044);
+  cvarManager->registerCvar("readirects_goal_addedspin_min",    "0", "Added spin min of shot directed towards goal", false, true, -6, true, 6);
+  cvarManager->registerCvar("readirects_goal_addedspin_max",    "0", "Added spin max of shot directed towards goal", false, true, -6, true, 6);
   cvarManager->registerCvar("readirects_goal_alternating",      "0", "Target alternating goals each call",     false, true, 0, true, 1);
 
   // towards wall settings
-  cvarManager->registerCvar("readirects_wall_shotspeed_min",    "0", "Minimum speed of shot directed towards wall", false, true, 0, true, 50);
-  cvarManager->registerCvar("readirects_wall_shotspeed_max",    "0", "Maximum speed of shot directed towards wall", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_wall_shotspeed_min",    "0", "Minimum speed of shot directed towards wall", false, true, 0, true, 6000);
+  cvarManager->registerCvar("readirects_wall_shotspeed_max",    "0", "Maximum speed of shot directed towards wall", false, true, 0, true, 6000);
   cvarManager->registerCvar("readirects_wall_sideoffset_min",   "0", "Side offset min of shot directed towards wall", false, true, 0, true, 50);
   cvarManager->registerCvar("readirects_wall_sideoffset_max",   "0", "Side offset max of shot directed towards wall", false, true, 0, true, 50);
   cvarManager->registerCvar("readirects_wall_heightoffset_min", "0", "Height above wall min of shot directed towards wall", false, true, 0, true, 50);
   cvarManager->registerCvar("readirects_wall_heightoffset_max", "0", "Height above wall max of shot directed towards wall", false, true, 0, true, 50);
   cvarManager->registerCvar("readirects_wall_addedspin_min",    "0", "Added spin min of shot directed towards wall", false, true, 0, true, 50);
   cvarManager->registerCvar("readirects_wall_addedspin_max",    "0", "Added spin max of shot directed towards wall", false, true, 0, true, 50);
+  cvarManager->registerCvar("readirects_wall_alternating",      "0", "Target alternating goals each call",     false, true, 0, true, 1);
 
   // towards corner settings
   cvarManager->registerCvar("readirects_corner_shotspeed_min",    "0", "Minimum speed of shot directed towards corner", false, true, 0, true, 50);
@@ -129,6 +129,17 @@ void ReadirectsPlugin::onLoad() {
 														0,
 														true,
 														1);
+
+	cvarManager->registerNotifier(
+		"readirects_shoot",
+		[&cv = this->cvarManager, &gw = this->gameWrapper, this](
+			std::vector<std::string> inp) {
+			std::shared_ptr<CVarManagerWrapper> cvm = cv;
+			std::shared_ptr<GameWrapper>				gmw = gw;
+			launchBall(cvm, gmw, inp);
+		},
+		"Executes next type of redirect in the playlist",
+		PERMISSION_FREEPLAY | PERMISSION_PAUSEMENU_CLOSED);
 	// clang-format on
 	// to keep a count of how many times the ball's hit by car
 	gameWrapper->HookEventPost(
@@ -139,12 +150,6 @@ void ReadirectsPlugin::onLoad() {
 	gameWrapper->HookEventPost(
 		"Function TAGame.Ball_TA.EventHitWorld",
 		std::bind(&ReadirectsPlugin::onWorldHitBall, this, std::placeholders::_1));
-
-	// if there's a timer, then hook into game ticks ---- THIS function IS FPS,
-	// lol
-	// gameWrapper->HookEventPost(
-	//  "Function TAGame.GameObserver_TA.Tick",
-	//  std::bind(&ReadirectsPlugin::onGameTick, this, std::placeholders::_1));
 
 	// follows the physics engine ticking to emulate a "timer"
 	gameWrapper->HookEventPost(
@@ -162,22 +167,24 @@ void ReadirectsPlugin::onUnload() {
 	gameWrapper->UnhookEvent("Function TAGame.Car_TA.SetVehicleInput");
 }
 
-void ReadirectsPlugin::launchBall() {
-	// not in freeplay
-	if (!gameWrapper->IsInFreeplay()) {
+void ReadirectsPlugin::launchBall(std::shared_ptr<CVarManagerWrapper> & cvm,
+																	std::shared_ptr<GameWrapper> &				gwm,
+																	std::vector<std::string>							inp) {
+	if (!readirectsEnabled)
 		return;
-	}
+	//  main driver
+	//  not in freeplay
+	if (!gwm->IsInFreeplay())
+		return;
 
-	ServerWrapper sw = gameWrapper->GetCurrentGameState();
+	ServerWrapper sw = gwm->GetCurrentGameState();
 	// check for null
-	if (!sw) {
+	if (!sw)
 		return;
-	}
 
 	// in case it's a workshop map
-	if (sw.GetGoals().Count() < 2 || sw.GetCars().Count() == 0) {
+	if (sw.GetGoals().Count() < 2 || sw.GetCars().Count() == 0)
 		return;
-	}
 
 	CarWrapper player = sw.GetCars().Get(0);
 	// check for null
@@ -186,12 +193,28 @@ void ReadirectsPlugin::launchBall() {
 	}
 }
 void ReadirectsPlugin::onCarHitBall(std::string eventName) {
+	if (!readirectsEnabled)
+		return;
 	// basically counting how many times the ball is hit by the player
+	cvarManager->log("player hit the ball");
 }
 
 void ReadirectsPlugin::onWorldHitBall(std::string eventName) {
+	if (!readirectsEnabled)
+		return;
 	// basically counting how many times the ball
 	// hits the map (ground, wall, ceiling)
+	ServerWrapper sw = gameWrapper->GetCurrentGameState();
+	if (!sw)
+		return;
+	BallWrapper bw = sw.GetBall();
+	if (!bw)
+		return;
+	Vector balloc = bw.GetLocation();
+	if (balloc.Z <= 92.75) {
+		// ball hit ground, add to a variable
+		cvarManager->log("ball hit the ground");
+	}
 }
 
 void ReadirectsPlugin::onGameTick(std::string eventName) {
@@ -203,7 +226,7 @@ void ReadirectsPlugin::onGameTick(std::string eventName) {
 	// according to
 	// https://discord.com/channels/862068148328857700/862081441080410143/934679289167761428
 	// I assume so because I heard once that the physics engine ticks at 120/s ...
-	//                                                                                                                                                :\
+	//                                                                                                                                                                                                              :\
   //so ((number of seconds) x 120)-- each tick;
 	if (_launchBallTimer <= 0) {
 		cvarManager->log("Timer ticked");
@@ -214,6 +237,17 @@ void ReadirectsPlugin::onGameTick(std::string eventName) {
 											 .count()));
 		_launchBallTimer = 119;
 		_lastPoint			 = std::chrono::system_clock::now();
+
+		ServerWrapper sw = gameWrapper->GetCurrentGameState();
+		if (!sw)
+			return;
+		BallWrapper bw = sw.GetBall();
+		if (!bw)
+			return;
+		Vector balloc = bw.GetLocation();
+		cvarManager->log("Ball location (X:" + std::to_string(balloc.X) +
+										 ",Y:" + std::to_string(balloc.Y) +
+										 ",Z:" + std::to_string(balloc.Z) + ")");
 	} else {
 		_launchBallTimer--;
 	}
