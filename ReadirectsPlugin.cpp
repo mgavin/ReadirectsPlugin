@@ -52,9 +52,13 @@ void ReadirectsPlugin::onLoad() {
   cvarManager->registerCvar("readirects_ceiling_addedspin",    "(-6, 6)", "Added spin of shot directed towards ceiling", false, true, -6, true, 6);
 
   // towards car settings
-  cvarManager->registerCvar("readirects_car_shotspeed",    "(0, 6000)", "Speed of shot directed towards car", false, true, 0, true, 6000);
-  cvarManager->registerCvar("readirects_car_sideoffset",   "(-2944, 2944)", "Side offset of shot directed towards car", false, true, -2944, true, 2944);
-  cvarManager->registerCvar("readirects_car_heightoffset", "(0, 2044)", "Height above car of shot directed towards car", false, true, 0, true, 2044);
+  cvarManager->registerCvar("readirects_car_pass_predict",  "1", "Predict car position when redirecting ball", false, true, 0, true, 1);
+  cvarManager->registerCvar("readirects_car_pass_on_ground",  "0", "Redirect the ball to car on the ground", false, true, 0, true, 1);
+  cvarManager->registerCvar("readirects_car_predict_multiplier_x",    "2", "X offset to use when passing (playerVelocityX * value)", false, true, 0.0, true, 5.0);
+  cvarManager->registerCvar("readirects_car_predict_multiplier_y",    "2", "Y offset to use when passing (playerVelocityY * value)", false, true, 0.0, true, 5.0);
+  cvarManager->registerCvar("readirects_car_shotspeed",    "(850, 1000)", "Speed of shot directed towards car", false, true, 0, true, 6000);
+  cvarManager->registerCvar("readirects_car_boundoffset",   "(0, 50)", "Side offset of shot directed towards car", false, true, -50, true, 50);
+  cvarManager->registerCvar("readirects_car_heightoffset", "(0, 200)", "Height above car of shot directed towards car", false, true, 0, true, 2044);
   cvarManager->registerCvar("readirects_car_addedspin",    "(-6, 6)", "Added spin of shot directed towards car", false, true, -6, true, 6);
 
 	// clang-format on
@@ -150,8 +154,6 @@ void ReadirectsPlugin::UnhookGameEngine() {
 }
 
 void ReadirectsPlugin::LaunchBall(std::vector<std::string> params) {
-	if (!readirectsEnabled)
-		return;
 	//  main driver
 	//  not in freeplay
 	if (!gameWrapper->IsInFreeplay())
@@ -168,9 +170,10 @@ void ReadirectsPlugin::LaunchBall(std::vector<std::string> params) {
 
 	CarWrapper player = sw.GetCars().Get(0);
 	// check for null
-	if (player.IsNull() || sw.GetBall().IsNull()) {
+	if (player.IsNull() || sw.GetBall().IsNull())
 		return;
-	}
+
+	TowardsCar();
 }
 void ReadirectsPlugin::OnCarHitsBall(std::string eventName) {
 	// basically counting how many times the ball is hit by the player
@@ -233,29 +236,29 @@ void ReadirectsPlugin::TowardsCorner() {
 void ReadirectsPlugin::TowardsCeiling() {
 }
 
-void ReadirectsPlugin::TowardsPlayer() {
+void ReadirectsPlugin::TowardsCar() {
 	// taken from the redirect plugin that comes with bakkesmod by default
-	ServerWrapper training = gameWrapper->GetGameEventAsServer();
+	ServerWrapper sw = gameWrapper->GetGameEventAsServer();
 
-	if (training.GetGameCar().IsNull() || training.GetBall().IsNull())
+	if (sw.GetGameCar().IsNull() || sw.GetBall().IsNull())
 		return;
 
-	Vector playerPosition = training.GetGameCar().GetLocation();
-	Vector ballPosition		= training.GetBall().GetLocation();
-	Vector playerVelocity = training.GetGameCar().GetVelocity();
+	Vector playerPosition = sw.GetGameCar().GetLocation();
+	Vector ballPosition		= sw.GetBall().GetLocation();
+	Vector playerVelocity = sw.GetGameCar().GetVelocity();
 
-	float ballSpeed = cvarManager->getCvar("redirect_shot_speed").getIntValue();
-	float offset_z	= cvarManager->getCvar("redirect_pass_offset_z").getIntValue();
+	float ballSpeed = cvarManager->getCvar("readirects_car_shotspeed").getIntValue();
+	float offset_z	= cvarManager->getCvar("readirects_car_heightoffset").getIntValue();
 
-	bool predict = cvarManager->getCvar("redirect_pass_predict").getBoolValue();
+	bool predict = cvarManager->getCvar("readirects_car_pass_predict").getBoolValue();
 
-	float predictMultiplierX = cvarManager->getCvar("redirect_predict_multiplier_x").getFloatValue();
-	float predictMultiplierY = cvarManager->getCvar("redirect_predict_multiplier_y").getFloatValue();
+	float predictMultiplierX = cvarManager->getCvar("readirects_car_predict_multiplier_x").getFloatValue();
+	float predictMultiplierY = cvarManager->getCvar("readirects_car_predict_multiplier_y").getFloatValue();
 
-	bool onGround = cvarManager->getCvar("redirect_on_ground").getBoolValue();
+	bool onGround = cvarManager->getCvar("readirects_car_pass_on_ground").getBoolValue();
 
-	int		 offsetX	 = cvarManager->getCvar("redirect_pass_offset").getIntValue();
-	int		 offsetY	 = cvarManager->getCvar("redirect_pass_offset").getIntValue();
+	int		 offsetX	 = cvarManager->getCvar("readirects_car_boundoffset").getIntValue();
+	int		 offsetY	 = cvarManager->getCvar("readirects_car_boundoffset").getIntValue();
 	int		 offsetZ	 = random(offset_z / 3, offset_z);
 	Vector offsetVec = Vector(offsetX, offsetY, offsetZ);
 
@@ -263,8 +266,8 @@ void ReadirectsPlugin::TowardsPlayer() {
 	if (predict)
 		velMultiplied = playerVelocity * Vector(predictMultiplierX, predictMultiplierY, 1);
 	offsetVec				= offsetVec + velMultiplied;
-	Vector shotData = training.GenerateShot(ballPosition, playerPosition + offsetVec, ballSpeed);
+	Vector shotData = sw.GenerateShot(ballPosition, playerPosition + offsetVec, ballSpeed);
 	if (onGround)
 		shotData.Z = 0;
-	training.GetBall().SetVelocity(shotData);
+	sw.GetBall().SetVelocity(shotData);
 }

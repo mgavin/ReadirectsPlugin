@@ -29,7 +29,7 @@ private:
 	void TowardsWall();
 	void TowardsCorner();
 	void TowardsCeiling();
-	void TowardsPlayer();
+	void TowardsCar();
 
 	void OnCarHitsBall(std::string eventName);
 	void OnBallHitsWorld(std::string eventName);

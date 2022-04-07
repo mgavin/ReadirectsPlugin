@@ -111,7 +111,7 @@ void ReadirectsPlugin::RenderSettings() {
 										ImVec2(ImGui::GetContentRegionAvail().x * 0.5f, ImGui::GetContentRegionAvail().y),
 										false,
 										ImGuiWindowFlags_HorizontalScrollbar);
-	auto addRangeSlider = [this](std::string cvarSuffix, const char * label) {
+	auto addRangeSliderInt = [this](std::string cvarSuffix, const char * label) {
 		CVarWrapper cvar = cvarManager->getCvar("readirects_" + cvarSuffix);
 		if (!cvar)
 			return;
@@ -122,14 +122,25 @@ void ReadirectsPlugin::RenderSettings() {
 		std::string value = "(" + std::to_string(min) + ", " + std::to_string(max) + ")";
 		cvar.setValue(value);
 	};
+	auto addRangeSliderFloat = [this](std::string cvarSuffix, const char * label) {
+		CVarWrapper cvar = cvarManager->getCvar("readirects_" + cvarSuffix);
+		if (!cvar)
+			return;
+		float				min, max;
+		std::string values = cvar.getStringValue();
+		sscanf(values.c_str(), "(%f, %f)", &min, &max);
+		ImGui::RangeSliderFloat(label, &min, &max, cvar.GetMinimum(), cvar.GetMaximum());
+		std::string value = "(" + std::to_string(min) + ", " + std::to_string(max) + ")";
+		cvar.setValue(value);
+	};
 	if (ImGui::CollapsingHeader("Towards Goal Settings")) {
 		addCheckbox("readirects_goal_alternating",
 								"Target Alternating Goals",
 								"Instead of targetting goal in front of car, they alternate");
-		addRangeSlider("goal_shotspeed", "Towards Goal Shot Speed");
-		addRangeSlider("goal_sideoffset", "Goal Side Offset");
-		addRangeSlider("goal_heightoffset", "Goal Height Offset");
-		addRangeSlider("goal_addedspin", "Goal Added Spin");
+		addRangeSliderInt("goal_shotspeed", "Towards Goal Shot Speed");
+		addRangeSliderInt("goal_sideoffset", "Goal Side Offset");
+		addRangeSliderInt("goal_heightoffset", "Goal Height Offset");
+		addRangeSliderInt("goal_addedspin", "Goal Added Spin");
 	}
 	if (settings_ids[0] == 0)
 		settings_ids[0] = ImGui::GetItemID();
@@ -137,34 +148,40 @@ void ReadirectsPlugin::RenderSettings() {
 		addCheckbox("readirects_wall_alternating",
 								"Target Alternating Walls",
 								"Instead of targetting wall in front of car, they alternate");
-		addRangeSlider("wall_shotspeed", "Towards Wall Shot Speed");
-		addRangeSlider("wall_sideoffset", "Wall Side Offset");
-		addRangeSlider("wall_heightoffset", "Wall Height Offset");
-		addRangeSlider("wall_addedspin", "Wall Added Spin");
+		addRangeSliderInt("wall_shotspeed", "Towards Wall Shot Speed");
+		addRangeSliderInt("wall_sideoffset", "Wall Side Offset");
+		addRangeSliderInt("wall_heightoffset", "Wall Height Offset");
+		addRangeSliderInt("wall_addedspin", "Wall Added Spin");
 	}
 	if (settings_ids[1] == 0)
 		settings_ids[1] = ImGui::GetItemID();
 	if (ImGui::CollapsingHeader("Towards Corner Settings")) {
-		addRangeSlider("corner_shotspeed", "Towards Corner Shot Speed");
-		addRangeSlider("corner_sideoffset", "Corner Side Offset");
-		addRangeSlider("corner_heightoffset", "Corner Height Offset");
-		addRangeSlider("corner_addedspin", "Corner Added Spin");
+		addRangeSliderInt("corner_shotspeed", "Towards Corner Shot Speed");
+		addRangeSliderInt("corner_sideoffset", "Corner Side Offset");
+		addRangeSliderInt("corner_heightoffset", "Corner Height Offset");
+		addRangeSliderInt("corner_addedspin", "Corner Added Spin");
 	}
 	if (settings_ids[2] == 0)
 		settings_ids[2] = ImGui::GetItemID();
 	if (ImGui::CollapsingHeader("Towards Ceiling Settings")) {
-		addRangeSlider("ceiling_shotspeed", "Towards Ceiling Shot Speed");
-		addRangeSlider("ceiling_sideoffset", "Ceiling Side Offset");
-		addRangeSlider("ceiling_heightoffset", "Ceiling Height Offset");
-		addRangeSlider("ceiling_addedspin", "Ceiling Added Spin");
+		addRangeSliderInt("ceiling_shotspeed", "Towards Ceiling Shot Speed");
+		addRangeSliderInt("ceiling_sideoffset", "Ceiling Side Offset");
+		addRangeSliderInt("ceiling_heightoffset", "Ceiling Height Offset");
+		addRangeSliderInt("ceiling_addedspin", "Ceiling Added Spin");
 	}
 	if (settings_ids[3] == 0)
 		settings_ids[3] = ImGui::GetItemID();
 	if (ImGui::CollapsingHeader("Towards Car Settings")) {
-		addRangeSlider("car_shotspeed", "Towards Car Shot Speed");
-		addRangeSlider("car_sideoffset", "Car Side Offset");
-		addRangeSlider("car_heightoffset", "Car Height Offset");
-		addRangeSlider("car_addedspin", "Car Added Spin");
+		addCheckbox("readirects_car_pass_predict",
+								"Enable position prediction",
+								"Enables ball redirected towards your predicted position");
+		addRangeSliderFloat("car_predict_multiplier_x", "Redirect predict multiplyer X");
+		addRangeSliderFloat("car_predict_multiplier_y", "Redirect predict multiplyer y");
+		addRangeSliderInt("car_shotspeed", "Towards Car Shot Speed");
+		addRangeSliderInt("car_boundoffset", "Car Bounds Offset");
+		addRangeSliderInt("car_heightoffset", "Car Height Offset");
+		addCheckbox("readirects_car_pass_on_ground", "Redirect on ground", "Enable redirecting ball towards car on ground");
+		addRangeSliderInt("car_addedspin", "Car Added Spin");
 	}
 	if (settings_ids[4] == 0)
 		settings_ids[4] = ImGui::GetItemID();
@@ -185,7 +202,7 @@ void ReadirectsPlugin::RenderSettings() {
 		return;
 	int timer_value = timer_seconds.getIntValue();
 	ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-	ImGui::SliderInt("##Timer Seconds", &timer_value, 1, 60, "%d seconds between redirects");
+	ImGui::SliderInt("##Timer Seconds", &timer_value, 1, 60, "%d second(s) between redirects");
 	timer_seconds.setValue(timer_value);
 
 	addCheckbox("readirects_enable_afternumballhits",
@@ -219,14 +236,8 @@ void ReadirectsPlugin::RenderSettings() {
 	if (!btn)
 		return;
 	char btnBoundText[300];
-	std::snprintf(btnBoundText, 200, "%s (hold button then click to change)", btn.getStringValue().c_str());
+	std::snprintf(btnBoundText, 200, "%s (bind readirects_shoot in bindings)", btn.getStringValue().c_str());
 	if (ImGui::Button(btnBoundText, ImVec2(ImGui::GetContentRegionAvail().x - 50, 20))) {
-		for (auto key : KEY_LIST) {
-			if (gameWrapper->IsKeyPressed(gameWrapper->GetFNameIndexByString(key))) {
-				btn.setValue(key);
-				break;
-			}
-		}
 	}
 
 	ImGui::Spacing();
