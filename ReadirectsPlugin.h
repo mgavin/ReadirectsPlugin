@@ -6,38 +6,35 @@
 #include "bakkesmod/plugin/pluginwindow.h"
 
 #include "version.h"
-constexpr auto plugin_version = stringify(VERSION_MAJOR) "." stringify(
-	VERSION_MINOR) "." stringify(VERSION_PATCH) "." stringify(VERSION_BUILD);
+constexpr auto plugin_version =
+	stringify(VERSION_MAJOR) "." stringify(VERSION_MINOR) "." stringify(VERSION_PATCH) "." stringify(VERSION_BUILD);
 
-class ReadirectsPlugin :
-		public BakkesMod::Plugin::BakkesModPlugin,
-		public BakkesMod::Plugin::PluginSettingsWindow {
+class ReadirectsPlugin : public BakkesMod::Plugin::BakkesModPlugin, public BakkesMod::Plugin::PluginSettingsWindow {
 public:
 	virtual void onLoad();
 	virtual void onUnload();
-
+	void				 HookGameEngine();
+	void				 UnhookGameEngine();
 	// primary driver
-	void launchBall(std::shared_ptr<CVarManagerWrapper> &,
-									std::shared_ptr<GameWrapper> &,
-									std::vector<std::string>);
+	void LaunchBall(std::shared_ptr<CVarManagerWrapper> &, std::shared_ptr<GameWrapper> &, std::vector<std::string>);
 
-	// settings
+	// bakkesmod pluginmanager settings
 	std::string GetPluginName() override;
 	void				SetImGuiContext(uintptr_t ctx) override;
 	void				RenderSettings() override;
 
 private:
 	// calculators / options
-	// towards goal
-	// towards player
-	void towardsPlayer();
-	// towards wall
-	void onCarHitBall(std::string eventName);
-	void onWorldHitBall(std::string eventName);
-	void onGameTick(std::string eventName);
+	void TowardsGoal();
+	void TowardsWall();
+	void TowardsCorner();
+	void TowardsCeiling();
+	void TowardsPlayer();
 
-	// accessors
-	// void getSettings() const;
+	void OnCarHitsBall(std::string eventName);
+	void OnBallHitsWorld(std::string eventName);
+	void OnBallHitsGround(std::string eventName);
+	void OnGameTick(std::string eventName);
 
 	// member variables
 	int																		_launchBallTimer = 0;

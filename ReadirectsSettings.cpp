@@ -16,9 +16,8 @@ void ReadirectsPlugin::SetImGuiContext(uintptr_t ctx) {
 }
 
 void ReadirectsPlugin::RenderSettings() {
-	auto addCheckbox = [this](std::string	 cvarName,
-														const char * chkboxText,
-														const char * tooltip) {
+	auto addCheckbox = [this](std::string cvarName, const char * chkboxText, const char * tooltip) {
+		// helper function to add a checkbox
 		CVarWrapper cvar = cvarManager->getCvar(cvarName);
 		if (!cvar)
 			return;
@@ -37,8 +36,7 @@ void ReadirectsPlugin::RenderSettings() {
 	ImGui::Spacing();
 	ImGui::AlignTextToFramePadding();
 	// enable plugin checkbox
-	addCheckbox(
-		"readirects_enabled", "Enable Plugin", "Toggle Readirects Plugin");
+	addCheckbox("readirects_enabled", "Enable Plugin", "Toggle Readirects Plugin");
 	ImGui::SameLine();
 	ImGui::SameLine(300);
 
@@ -91,8 +89,7 @@ void ReadirectsPlugin::RenderSettings() {
 
 	/* LEFT WINDOW */
 	ImGui::BeginChild("ChildL",
-										ImVec2(ImGui::GetContentRegionAvail().x * 0.5f,
-													 ImGui::GetContentRegionAvail().y),
+										ImVec2(ImGui::GetContentRegionAvail().x * 0.5f, ImGui::GetContentRegionAvail().y),
 										false,
 										ImGuiWindowFlags_HorizontalScrollbar);
 	auto addRangeSlider = [this](std::string cvarSuffix, const char * label) {
@@ -102,10 +99,8 @@ void ReadirectsPlugin::RenderSettings() {
 		int					min, max;
 		std::string values = cvar.getStringValue();
 		sscanf(values.c_str(), "(%d, %d)", &min, &max);
-		ImGui::RangeSliderInt(
-			label, &min, &max, cvar.GetMinimum(), cvar.GetMaximum());
-		std::string value =
-			"(" + std::to_string(min) + ", " + std::to_string(max) + ")";
+		ImGui::RangeSliderInt(label, &min, &max, cvar.GetMinimum(), cvar.GetMaximum());
+		std::string value = "(" + std::to_string(min) + ", " + std::to_string(max) + ")";
 		cvar.setValue(value);
 	};
 	if (ImGui::CollapsingHeader("Towards Goal Settings")) {
@@ -160,22 +155,18 @@ void ReadirectsPlugin::RenderSettings() {
 	/* END LEFT WINDOW */
 	ImGui::SameLine();
 	/* RIGHT WINDOW */
-	ImGui::BeginChild(
-		"ChildR",
-		ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y),
-		false,
-		ImGuiWindowFlags_HorizontalScrollbar);
-	addCheckbox("readirects_enable_timer",
-							"Enable timer? ",
-							"Redirects the ball based on a timer");
+	ImGui::BeginChild("ChildR",
+										ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y),
+										false,
+										ImGuiWindowFlags_HorizontalScrollbar);
+	addCheckbox("readirects_enable_timer", "Enable timer? ", "Redirects the ball based on a timer");
 	ImGui::SameLine();
 	CVarWrapper timer_seconds = cvarManager->getCvar("readirects_timer_seconds");
 	if (!timer_seconds)
 		return;
 	int timer_value = timer_seconds.getIntValue();
 	ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-	ImGui::SliderInt(
-		"##Timer Seconds", &timer_value, 1, 60, "%d seconds between redirects");
+	ImGui::SliderInt("##Timer Seconds", &timer_value, 1, 60, "%d seconds between redirects");
 	timer_seconds.setValue(timer_value);
 
 	addCheckbox("readirects_enable_afternumballhits",
@@ -194,14 +185,12 @@ void ReadirectsPlugin::RenderSettings() {
 							"Enable after ball hits ground # times? ",
 							"Redirects the ball when ball hits ground # times");
 	ImGui::SameLine();
-	CVarWrapper ground_hits =
-		cvarManager->getCvar("readirects_numballhitsground");
+	CVarWrapper ground_hits = cvarManager->getCvar("readirects_numballhitsground");
 	if (!ground_hits)
 		return;
 	int ballhitground_value = ground_hits.getIntValue();
 	ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
-	ImGui::SliderInt(
-		"##Ground Hits", &ballhitground_value, 1, 25, "%d Ground Hit(s)");
+	ImGui::SliderInt("##Ground Hits", &ballhitground_value, 1, 25, "%d Ground Hit(s)");
 	ground_hits.setValue(ballhitground_value);
 
 	ImGui::AlignTextToFramePadding();
@@ -215,11 +204,11 @@ void ReadirectsPlugin::RenderSettings() {
 	ImGui::AlignTextToFramePadding();
 	ImGui::TextUnformatted("Playlist");
 	ImGui::SameLine(100);
-	addCheckbox(
-		"readirects_enable_randomizeplaylist",
-		"Randomize playlist?",
-		"Actions in the playlist will be executed randomly instead of in-order");
+	addCheckbox("readirects_enable_randomizeplaylist",
+							"Randomize playlist?",
+							"Actions in the playlist will be executed randomly instead of in-order");
 	ImGui::BeginChild(
+
 		"ChildR_Playlist",
 		ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y),
 		true,

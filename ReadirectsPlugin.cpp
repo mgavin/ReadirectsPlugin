@@ -1,23 +1,25 @@
 #include "ReadirectsPlugin.h"
+#include "bakkesmod/wrappers/GameEvent/TutorialWrapper.h"
 #include "bakkesmod/wrappers/GameObject/BallWrapper.h"
 #include "bakkesmod/wrappers/GameObject/CarWrapper.h"
 #include "utils/parser.h"
 
-BAKKESMOD_PLUGIN(ReadirectsPlugin,
-								 "Readirects Plugin",
-								 plugin_version,
-								 PLUGINTYPE_FREEPLAY)
+BAKKESMOD_PLUGIN(ReadirectsPlugin, "Readirects Plugin", plugin_version, PLUGINTYPE_FREEPLAY)
 bool readirectsEnabled = false;
+bool gameHooked				 = false;
 
 void ReadirectsPlugin::onLoad() {
 	// set options
 
+	// option to enable plugin
+	cvarManager->registerCvar("readirects_enabled", "0", "Enable ReadirectsPlugin", true, true, 0, true, 1)
+		.addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
+			readirectsEnabled = cvar.getBoolValue();
+			if (readirectsEnabled && !gameHooked) {
+			} else {
+			}
+		});
 	// clang-format off
-  // option to enable plugin
-  cvarManager->registerCvar("readirects_enabled", "0", "Enable ReadirectsPlugin", true, true, 0, true, 1)
-    .addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
-      readirectsEnabled = cvar.getBoolValue();
-    });
   // options for where to redirect the ball
   cvarManager->registerCvar("readirects_towards_goal",   "0", "Enable ball redirecting towards goal",    false, true, 0, true, 1);
   cvarManager->registerCvar("readirects_towards_wall",   "0", "Enable ball redirecting towards wall",    false, true, 0, true, 1);
@@ -58,57 +60,30 @@ void ReadirectsPlugin::onLoad() {
   cvarManager->registerCvar("readirects_car_addedspin",    "(-6, 6)", "Added spin of shot directed towards car", false, true, -6, true, 6);
 
 	// clang-format on
-	cvarManager->registerCvar("readirects_enable_timer",
-														"0",
-														"Run playlist on a timer",
-														false,
-														true,
-														0,
-														true,
-														1);
+	cvarManager->registerCvar("readirects_enable_timer", "0", "Run playlist on a timer", false, true, 0, true, 1);
 
-	cvarManager->registerCvar("readirects_enable_afternumballhits",
+	cvarManager->registerCvar(
+		"readirects_enable_afternumballhits", "0", "Run playlist after number of ball hits", false, true, 0, true, 1);
+	cvarManager->registerCvar(
+		"readirects_enable_afterballhitsground", "0", "Run playlist when ball hits ground", false, true, 0, true, 1);
+	cvarManager->registerCvar(
+		"readirects_timer_seconds", "1", "Seconds between redirecting the ball", false, true, 1, true, 60);
+	cvarManager->registerCvar("readirects_numballhitscar",
 														"0",
-														"Run playlist after number of ball hits",
-														false,
-														true,
-														0,
-														true,
-														1);
-	cvarManager->registerCvar("readirects_enable_afterballhitsground",
-														"0",
-														"Run playlist when ball hits ground",
-														false,
-														true,
-														0,
-														true,
-														1);
-	cvarManager->registerCvar("readirects_timer_seconds",
-														"1",
-														"Seconds between redirecting the ball",
+														"Number of ball hits by car before redirecting the ball",
 														false,
 														true,
 														1,
 														true,
-														60);
-	cvarManager->registerCvar(
-		"readirects_numballhitscar",
-		"0",
-		"Number of ball hits by car before redirecting the ball",
-		false,
-		true,
-		1,
-		true,
-		10);
-	cvarManager->registerCvar(
-		"readirects_numballhitsground",
-		"0",
-		"Number of ball hits by wall before redirecting the ball",
-		false,
-		true,
-		1,
-		true,
-		25);
+														10);
+	cvarManager->registerCvar("readirects_numballhitsground",
+														"0",
+														"Number of ball hits by wall before redirecting the ball",
+														false,
+														true,
+														1,
+														true,
+														25);
 	/* JUST CONCEPTUALLY ENABLING/DISABLING OTHER CHECKBOXES
 	CVarWrapper ontimer = cvarManager->getCvar("readirects_enable_timer");
 	CVarWrapper afternumballhits =
@@ -128,53 +103,59 @@ void ReadirectsPlugin::onLoad() {
 		abhg.setValue(0);
 	});
 	*/
-	cvarManager->registerCvar("readirects_enable_randomizeplaylist",
-														"0",
-														"Randomly execute playlist?",
-														false,
-														true,
-														0,
-														true,
-														1);
+	cvarManager->registerCvar(
+		"readirects_enable_randomizeplaylist", "0", "Randomly execute playlist?", false, true, 0, true, 1);
 
 	cvarManager->registerNotifier(
 		"readirects_shoot",
-		[&cv = this->cvarManager, &gw = this->gameWrapper, this](
-			std::vector<std::string> inp) {
+		[&cv = this->cvarManager, &gw = this->gameWrapper, this](std::vector<std::string> inp) {
 			std::shared_ptr<CVarManagerWrapper> cvm = cv;
 			std::shared_ptr<GameWrapper>				gmw = gw;
-			launchBall(cvm, gmw, inp);
+			LaunchBall(cvm, gmw, inp);
 		},
 		"Executes next type of redirect in the playlist",
 		PERMISSION_FREEPLAY | PERMISSION_PAUSEMENU_CLOSED);
-	// clang-format on
-	// to keep a count of how many times the ball's hit by car
-	gameWrapper->HookEventPost(
-		"Function TAGame.Car_TA.EventHitBall",
-		std::bind(&ReadirectsPlugin::onCarHitBall, this, std::placeholders::_1));
 
-	// when the ball hits some part of the map
-	gameWrapper->HookEventPost(
-		"Function TAGame.Ball_TA.EventHitWorld",
-		std::bind(&ReadirectsPlugin::onWorldHitBall, this, std::placeholders::_1));
-
-	// follows the physics engine ticking to emulate a "timer"
-	gameWrapper->HookEventPost(
-		"Function TAGame.Car_TA.SetVehicleInput",
-		std::bind(&ReadirectsPlugin::onGameTick, this, std::placeholders::_1));
 	_launchBallTimer = 119;
 	_lastPoint			 = std::chrono::system_clock::now();
 }
 
 void ReadirectsPlugin::onUnload() {
+}
+
+void ReadirectsPlugin::HookGameEngine() {
+	// to keep a count of how many times the ball's hit by car
+	gameWrapper->HookEventPost("Function TAGame.Car_TA.EventHitBall",
+														 std::bind(&ReadirectsPlugin::OnCarHitsBall, this, std::placeholders::_1));
+
+	// when the ball hits some part of the map
+	gameWrapper->HookEventPost("Function TAGame.Ball_TA.EventHitWorld",
+														 std::bind(&ReadirectsPlugin::OnBallHitsWorld, this, std::placeholders::_1));
+
+	// when the ball hits the ground
+	gameWrapper->HookEventPost("Function TAGame.Ball_TA.EventHitGround",
+														 std::bind(&ReadirectsPlugin::OnBallHitsGround, this, std::placeholders::_1));
+
+	// follows the physics engine ticking to emulate a "timer"
+	gameWrapper->HookEventPost("Function TAGame.Car_TA.SetVehicleInput",
+														 std::bind(&ReadirectsPlugin::OnGameTick, this, std::placeholders::_1));
+
+	// a check on if the game is hooked
+	gameHooked = true;
+}
+
+void ReadirectsPlugin::UnhookGameEngine() {
 	// cleanup
 	gameWrapper->UnhookEvent("Function TAGame.Car_TA.EventHitBall");
 	gameWrapper->UnhookEvent("Function TAGame.Ball_TA.EventHitWorld");
+	gameWrapper->UnhookEvent("Function TAGame.Ball_TA.EventHitGround");
 	// gameWrapper->UnhookEvent("Function TAGame.GameObserver_TA.Tick");
 	gameWrapper->UnhookEvent("Function TAGame.Car_TA.SetVehicleInput");
+
+	gameHooked = false;
 }
 
-void ReadirectsPlugin::launchBall(std::shared_ptr<CVarManagerWrapper> & cvm,
+void ReadirectsPlugin::LaunchBall(std::shared_ptr<CVarManagerWrapper> & cvm,
 																	std::shared_ptr<GameWrapper> &				gwm,
 																	std::vector<std::string>							inp) {
 	if (!readirectsEnabled)
@@ -199,18 +180,14 @@ void ReadirectsPlugin::launchBall(std::shared_ptr<CVarManagerWrapper> & cvm,
 		return;
 	}
 }
-void ReadirectsPlugin::onCarHitBall(std::string eventName) {
-	if (!readirectsEnabled)
-		return;
+void ReadirectsPlugin::OnCarHitsBall(std::string eventName) {
 	// basically counting how many times the ball is hit by the player
 	cvarManager->log("player hit the ball");
 }
 
-void ReadirectsPlugin::onWorldHitBall(std::string eventName) {
-	if (!readirectsEnabled)
-		return;
+void ReadirectsPlugin::OnBallHitsWorld(std::string eventName) {
 	// basically counting how many times the ball
-	// hits the map (ground, wall, ceiling)
+	// hits the map (wall, ceiling)
 	ServerWrapper sw = gameWrapper->GetCurrentGameState();
 	if (!sw)
 		return;
@@ -218,30 +195,26 @@ void ReadirectsPlugin::onWorldHitBall(std::string eventName) {
 	if (!bw)
 		return;
 	Vector balloc = bw.GetLocation();
-	if (balloc.Z <= 92.75) {
-		// ball hit ground, add to a variable
-		cvarManager->log("ball hit the ground");
-	}
 }
 
-void ReadirectsPlugin::onGameTick(std::string eventName) {
-	if (!readirectsEnabled) {
-		return;
-	}
+void ReadirectsPlugin::OnBallHitsGround(std::string eventName) {
+	// keeping a count of how many times the ball hits the ground
+}
+
+void ReadirectsPlugin::OnGameTick(std::string eventName) {
 	// using this for a Timer function
 	// assume game physics engine ticks at 120x per second
 	// according to
 	// https://discord.com/channels/862068148328857700/862081441080410143/934679289167761428
 	// I assume so because I heard once that the physics engine ticks at 120/s ...
-	//                                                                                                                                                                                                                                                    :\
-  //so ((number of seconds) x 120)-- each tick;
+	//  :\
+  // so ((number of seconds) x 120) == each tick;
 	if (_launchBallTimer <= 0) {
 		cvarManager->log("Timer ticked");
 		cvarManager->log(
 			"Calculated time in second: " +
-			std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(
-											 std::chrono::system_clock::now() - _lastPoint)
-											 .count()));
+			std::to_string(
+				std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - _lastPoint).count()));
 		_launchBallTimer = 119;
 		_lastPoint			 = std::chrono::system_clock::now();
 
@@ -252,15 +225,23 @@ void ReadirectsPlugin::onGameTick(std::string eventName) {
 		if (!bw)
 			return;
 		Vector balloc = bw.GetLocation();
-		cvarManager->log("Ball location (X:" + std::to_string(balloc.X) +
-										 ",Y:" + std::to_string(balloc.Y) +
+		cvarManager->log("Ball location (X:" + std::to_string(balloc.X) + ",Y:" + std::to_string(balloc.Y) +
 										 ",Z:" + std::to_string(balloc.Z) + ")");
 	} else {
 		_launchBallTimer--;
 	}
 }
 
-void ReadirectsPlugin::towardsPlayer() {
+void ReadirectsPlugin::TowardsGoal() {
+}
+void ReadirectsPlugin::TowardsWall() {
+}
+void ReadirectsPlugin::TowardsCorner() {
+}
+void ReadirectsPlugin::TowardsCeiling() {
+}
+
+void ReadirectsPlugin::TowardsPlayer() {
 	// taken from the redirect plugin that comes with bakkesmod by default
 	ServerWrapper training = gameWrapper->GetGameEventAsServer();
 
@@ -272,14 +253,12 @@ void ReadirectsPlugin::towardsPlayer() {
 	Vector playerVelocity = training.GetGameCar().GetVelocity();
 
 	float ballSpeed = cvarManager->getCvar("redirect_shot_speed").getIntValue();
-	float offset_z = cvarManager->getCvar("redirect_pass_offset_z").getIntValue();
+	float offset_z	= cvarManager->getCvar("redirect_pass_offset_z").getIntValue();
 
 	bool predict = cvarManager->getCvar("redirect_pass_predict").getBoolValue();
 
-	float predictMultiplierX =
-		cvarManager->getCvar("redirect_predict_multiplier_x").getFloatValue();
-	float predictMultiplierY =
-		cvarManager->getCvar("redirect_predict_multiplier_y").getFloatValue();
+	float predictMultiplierX = cvarManager->getCvar("redirect_predict_multiplier_x").getFloatValue();
+	float predictMultiplierY = cvarManager->getCvar("redirect_predict_multiplier_y").getFloatValue();
 
 	bool onGround = cvarManager->getCvar("redirect_on_ground").getBoolValue();
 
@@ -290,11 +269,9 @@ void ReadirectsPlugin::towardsPlayer() {
 
 	Vector velMultiplied;
 	if (predict)
-		velMultiplied =
-			playerVelocity * Vector(predictMultiplierX, predictMultiplierY, 1);
-	offsetVec = offsetVec + velMultiplied;
-	Vector shotData =
-		training.GenerateShot(ballPosition, playerPosition + offsetVec, ballSpeed);
+		velMultiplied = playerVelocity * Vector(predictMultiplierX, predictMultiplierY, 1);
+	offsetVec				= offsetVec + velMultiplied;
+	Vector shotData = training.GenerateShot(ballPosition, playerPosition + offsetVec, ballSpeed);
 	if (onGround)
 		shotData.Z = 0;
 	training.GetBall().SetVelocity(shotData);
