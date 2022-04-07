@@ -221,46 +221,12 @@ void ReadirectsPlugin::RenderSettings() {
 	char btnBoundText[300];
 	std::snprintf(btnBoundText, 200, "%s (hold button then click to change)", btn.getStringValue().c_str());
 	if (ImGui::Button(btnBoundText, ImVec2(ImGui::GetContentRegionAvail().x - 50, 20))) {
-		ImGui::OpenPopup("ReadirectsKeybindChange");
-	}
-	ImVec2 windowsize = ImGui::GetWindowSize();
-	ImVec2 windowpos	= ImGui::GetWindowPos();
-	ImGui::SetNextWindowPos(
-		ImVec2(windowpos.x, windowpos.y + windowsize.y * 0.5f), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-	ImGuiIO & io = ImGui::GetIO();
-	ImGui::Text("NavInputs down:");
-	for (int i = 0; i < IM_ARRAYSIZE(io.NavInputs); i++)
-		if (io.NavInputs[i] > 0.0f) {
-			ImGui::SameLine();
-			ImGui::Text("[%d] %.2f (%.02f secs)", i, io.NavInputs[i], io.NavInputsDownDuration[i]);
-		}
-	ImGui::Text("NavInputs pressed:");
-	for (int i = 0; i < IM_ARRAYSIZE(io.NavInputs); i++)
-		if (io.NavInputsDownDuration[i] == 0.0f) {
-			ImGui::SameLine();
-			ImGui::Text("[%d]", i);
-		}
-	if (ImGui::BeginPopupModal("ReadirectsKeybindChange", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-		ImGui::Text("Press any key to bind to...");
-		if (!btn.getStringValue().empty()) {
-			std::string prev_bind = cvarManager->getBindStringForKey(btn.getStringValue());
-			cvarManager->executeCommand("unbind " + prev_bind);
-		}
-
-		ImGui::SetItemDefaultFocus();
-		static float x, x1, x2;
-		for (int i = 0; i < IM_ARRAYSIZE(io.NavInputs); ++i) {
-			if (io.NavInputsDownDuration[i] == 0.0f) {
-				x	 = i;
-				x1 = io.NavInputs[i];
-				x2 = io.NavInputsDownDuration[i];
+		for (auto key : KEY_LIST) {
+			if (gameWrapper->IsKeyPressed(gameWrapper->GetFNameIndexByString(key))) {
+				btn.setValue(key);
+				break;
 			}
 		}
-		char fuckme[40];
-		_itoa(io.BackendFlags, fuckme, 2);
-		ImGui::Text("[%d] %.2f (%0.2f secs) %s", x, x1, x2, fuckme);
-		// ImGui::CloseCurrentPopup();
-		ImGui::EndPopup();
 	}
 
 	ImGui::Spacing();
