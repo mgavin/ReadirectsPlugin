@@ -7,12 +7,32 @@
 ImGuiStorage *			 settings_storage;
 std::vector<ImGuiID> settings_ids(5);
 
+static const std::vector<std::string> KEY_LIST = {"XboxTypeS_A",
+																									"XboxTypeS_B",
+																									"XboxTypeS_X",
+																									"XboxTypeS_Y",
+																									"XboxTypeS_RightShoulder",
+																									"XboxTypeS_RightTrigger",
+																									"XboxTypeS_RightThumbStick",
+																									"XboxTypeS_LeftShoulder",
+																									"XboxTypeS_LeftTrigger",
+																									"XboxTypeS_LeftThumbStick",
+																									"XboxTypeS_Start",
+																									"XboxTypeS_Back",
+																									"XboxTypeS_DPad_Up",
+																									"XboxTypeS_DPad_Left",
+																									"XboxTypeS_DPad_Right",
+																									"XboxTypeS_DPad_Down"};
+
 std::string ReadirectsPlugin::GetPluginName() {
 	return "Readirects Plugin";
 }
 
 void ReadirectsPlugin::SetImGuiContext(uintptr_t ctx) {
 	ImGui::SetCurrentContext(reinterpret_cast<ImGuiContext *>(ctx));
+	ImGuiIO & io = ImGui::GetIO();
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+	io.BackendFlags |= ImGuiBackendFlags_HasGamepad;
 }
 
 void ReadirectsPlugin::RenderSettings() {
@@ -31,7 +51,6 @@ void ReadirectsPlugin::RenderSettings() {
 			ImGui::SetTooltip(tooltip);
 		}
 	};
-
 	/* FIRST LINE */
 	ImGui::Spacing();
 	ImGui::AlignTextToFramePadding();
@@ -195,10 +214,55 @@ void ReadirectsPlugin::RenderSettings() {
 
 	ImGui::AlignTextToFramePadding();
 	ImGui::Text("Bind exec playlist to button: ");
-	CVarWrapper btn = cvarManager->getCvar("readirects_shoot");
-	char				btnBoundText[200];
-	std::snprintf(btnBoundText, 200, "%s (click to change)", "");
-	// if (ImGui::Button(cvarManager->get
+	ImGui::SameLine();
+	CVarWrapper btn = cvarManager->getCvar("readirects_shoot_key");
+	if (!btn)
+		return;
+	char btnBoundText[300];
+	std::snprintf(btnBoundText, 200, "%s (hold button then click to change)", btn.getStringValue().c_str());
+	if (ImGui::Button(btnBoundText, ImVec2(ImGui::GetContentRegionAvail().x - 50, 20))) {
+		ImGui::OpenPopup("ReadirectsKeybindChange");
+	}
+	ImVec2 windowsize = ImGui::GetWindowSize();
+	ImVec2 windowpos	= ImGui::GetWindowPos();
+	ImGui::SetNextWindowPos(
+		ImVec2(windowpos.x, windowpos.y + windowsize.y * 0.5f), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+	ImGuiIO & io = ImGui::GetIO();
+	ImGui::Text("NavInputs down:");
+	for (int i = 0; i < IM_ARRAYSIZE(io.NavInputs); i++)
+		if (io.NavInputs[i] > 0.0f) {
+			ImGui::SameLine();
+			ImGui::Text("[%d] %.2f (%.02f secs)", i, io.NavInputs[i], io.NavInputsDownDuration[i]);
+		}
+	ImGui::Text("NavInputs pressed:");
+	for (int i = 0; i < IM_ARRAYSIZE(io.NavInputs); i++)
+		if (io.NavInputsDownDuration[i] == 0.0f) {
+			ImGui::SameLine();
+			ImGui::Text("[%d]", i);
+		}
+	if (ImGui::BeginPopupModal("ReadirectsKeybindChange", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+		ImGui::Text("Press any key to bind to...");
+		if (!btn.getStringValue().empty()) {
+			std::string prev_bind = cvarManager->getBindStringForKey(btn.getStringValue());
+			cvarManager->executeCommand("unbind " + prev_bind);
+		}
+
+		ImGui::SetItemDefaultFocus();
+		static float x, x1, x2;
+		for (int i = 0; i < IM_ARRAYSIZE(io.NavInputs); ++i) {
+			if (io.NavInputsDownDuration[i] == 0.0f) {
+				x	 = i;
+				x1 = io.NavInputs[i];
+				x2 = io.NavInputsDownDuration[i];
+			}
+		}
+		char fuckme[40];
+		_itoa(io.BackendFlags, fuckme, 2);
+		ImGui::Text("[%d] %.2f (%0.2f secs) %s", x, x1, x2, fuckme);
+		// ImGui::CloseCurrentPopup();
+		ImGui::EndPopup();
+	}
+
 	ImGui::Spacing();
 	ImGui::Spacing();
 	ImGui::AlignTextToFramePadding();

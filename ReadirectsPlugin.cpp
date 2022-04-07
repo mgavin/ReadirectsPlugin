@@ -9,8 +9,6 @@ bool readirectsEnabled = false;
 bool gameHooked				 = false;
 
 void ReadirectsPlugin::onLoad() {
-	// set options
-
 	// option to enable plugin
 	cvarManager->registerCvar("readirects_enabled", "0", "Enable ReadirectsPlugin", true, true, 0, true, 1)
 		.addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
@@ -106,15 +104,11 @@ void ReadirectsPlugin::onLoad() {
 	cvarManager->registerCvar(
 		"readirects_enable_randomizeplaylist", "0", "Randomly execute playlist?", false, true, 0, true, 1);
 
-	cvarManager->registerNotifier(
-		"readirects_shoot",
-		[&cv = this->cvarManager, &gw = this->gameWrapper, this](std::vector<std::string> inp) {
-			std::shared_ptr<CVarManagerWrapper> cvm = cv;
-			std::shared_ptr<GameWrapper>				gmw = gw;
-			LaunchBall(cvm, gmw, inp);
-		},
-		"Executes next type of redirect in the playlist",
-		PERMISSION_FREEPLAY | PERMISSION_PAUSEMENU_CLOSED);
+	cvarManager->registerCvar("readirects_shoot_key", "", "Key set to execute readirects next shot in playlist");
+	cvarManager->registerNotifier("readirects_shoot",
+																bind(&ReadirectsPlugin::LaunchBall, this, std::placeholders::_1),
+																"Executes next type of redirect in the playlist",
+																PERMISSION_FREEPLAY | PERMISSION_PAUSEMENU_CLOSED);
 
 	_launchBallTimer = 119;
 	_lastPoint			 = std::chrono::system_clock::now();
@@ -155,17 +149,15 @@ void ReadirectsPlugin::UnhookGameEngine() {
 	gameHooked = false;
 }
 
-void ReadirectsPlugin::LaunchBall(std::shared_ptr<CVarManagerWrapper> & cvm,
-																	std::shared_ptr<GameWrapper> &				gwm,
-																	std::vector<std::string>							inp) {
+void ReadirectsPlugin::LaunchBall(std::vector<std::string> params) {
 	if (!readirectsEnabled)
 		return;
 	//  main driver
 	//  not in freeplay
-	if (!gwm->IsInFreeplay())
+	if (!gameWrapper->IsInFreeplay())
 		return;
 
-	ServerWrapper sw = gwm->GetCurrentGameState();
+	ServerWrapper sw = gameWrapper->GetCurrentGameState();
 	// check for null
 	if (!sw)
 		return;

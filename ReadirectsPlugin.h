@@ -16,7 +16,7 @@ public:
 	void				 HookGameEngine();
 	void				 UnhookGameEngine();
 	// primary driver
-	void LaunchBall(std::shared_ptr<CVarManagerWrapper> &, std::shared_ptr<GameWrapper> &, std::vector<std::string>);
+	void LaunchBall(std::vector<std::string>);
 
 	// bakkesmod pluginmanager settings
 	std::string GetPluginName() override;
