@@ -34,8 +34,8 @@ void ReadirectsPlugin::SetImGuiContext(uintptr_t ctx) {
 }
 
 void ReadirectsPlugin::RenderSettings() {
+  // helper functions to add ImGui elements
   auto addCheckbox = [this](std::string cvarName, const char * chkboxText, const char * tooltip) {
-    // helper function to add a checkbox
     CVarWrapper cvar = cvarManager->getCvar(cvarName);
     if (!cvar)
       return;
@@ -48,6 +48,28 @@ void ReadirectsPlugin::RenderSettings() {
     if (ImGui::IsItemHovered()) {
       ImGui::SetTooltip(tooltip);
     }
+  };
+  auto addRangeSliderInt = [this](std::string cvarSuffix, const char * label) {
+    CVarWrapper cvar = cvarManager->getCvar("readirects_" + cvarSuffix);
+    if (!cvar)
+      return;
+    int         min, max;
+    std::string values = cvar.getStringValue();
+    sscanf(values.c_str(), "(%d, %d)", &min, &max);
+    ImGui::RangeSliderInt(label, &min, &max, cvar.GetMinimum(), cvar.GetMaximum());
+    std::string value = "(" + std::to_string(min) + ", " + std::to_string(max) + ")";
+    cvar.setValue(value);
+  };
+  auto addRangeSliderFloat = [this](std::string cvarSuffix, const char * label) {
+    CVarWrapper cvar = cvarManager->getCvar("readirects_" + cvarSuffix);
+    if (!cvar)
+      return;
+    float       min, max;
+    std::string values = cvar.getStringValue();
+    sscanf(values.c_str(), "(%f, %f)", &min, &max);
+    ImGui::RangeSliderFloat(label, &min, &max, cvar.GetMinimum(), cvar.GetMaximum());
+    std::string value = "(" + std::to_string(min) + ", " + std::to_string(max) + ")";
+    cvar.setValue(value);
   };
   /* FIRST LINE */
   ImGui::Spacing();
@@ -109,28 +131,6 @@ void ReadirectsPlugin::RenderSettings() {
                     ImVec2(ImGui::GetContentRegionAvail().x * 0.5f, ImGui::GetContentRegionAvail().y),
                     false,
                     ImGuiWindowFlags_HorizontalScrollbar);
-  auto addRangeSliderInt = [this](std::string cvarSuffix, const char * label) {
-    CVarWrapper cvar = cvarManager->getCvar("readirects_" + cvarSuffix);
-    if (!cvar)
-      return;
-    int         min, max;
-    std::string values = cvar.getStringValue();
-    sscanf(values.c_str(), "(%d, %d)", &min, &max);
-    ImGui::RangeSliderInt(label, &min, &max, cvar.GetMinimum(), cvar.GetMaximum());
-    std::string value = "(" + std::to_string(min) + ", " + std::to_string(max) + ")";
-    cvar.setValue(value);
-  };
-  auto addRangeSliderFloat = [this](std::string cvarSuffix, const char * label) {
-    CVarWrapper cvar = cvarManager->getCvar("readirects_" + cvarSuffix);
-    if (!cvar)
-      return;
-    float       min, max;
-    std::string values = cvar.getStringValue();
-    sscanf(values.c_str(), "(%f, %f)", &min, &max);
-    ImGui::RangeSliderFloat(label, &min, &max, cvar.GetMinimum(), cvar.GetMaximum());
-    std::string value = "(" + std::to_string(min) + ", " + std::to_string(max) + ")";
-    cvar.setValue(value);
-  };
   if (ImGui::CollapsingHeader("Towards Goal Settings")) {
     settings_ids[0] = ImGui::GetItemID();
     addCheckbox("readirects_goal_alternating",

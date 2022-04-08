@@ -476,6 +476,7 @@ void ReadirectsPlugin::OnGameTick(std::string eventName) {
 }
 
 void ReadirectsPlugin::TowardsGoal(std::shared_ptr<ServerWrapper> sw, std::shared_ptr<CarWrapper> player) {
+  // taken from the rebound plugin that comes by default with bakkesmod
   Vector ballLoc = sw->GetBall().GetLocation();
 
   // Calculate nearest goal
