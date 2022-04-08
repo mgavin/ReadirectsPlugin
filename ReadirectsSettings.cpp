@@ -139,17 +139,32 @@ void ReadirectsPlugin::RenderSettings() {
 		addRangeSliderInt("goal_sideoffset", "Goal Side Offset");
 		addRangeSliderInt("goal_heightoffset", "Goal Height Offset");
 		addRangeSliderInt("goal_addedspin", "Goal Added Spin");
+
+		CVarWrapper towards_goal_amount = cvarManager->getCvar("readirects_towards_goal_amount");
+		if (!towards_goal_amount)
+			return;
+		int amt = towards_goal_amount.getIntValue();
+		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+		ImGui::SliderInt("##AmtTimesTowardsGoal", &amt, 1, 10, "Amount of times ball directs towards goal in playlist: %d");
+		towards_goal_amount.setValue(amt);
 	}
 	if (settings_ids[0] == 0)
 		settings_ids[0] = ImGui::GetItemID();
 	if (ImGui::CollapsingHeader("Towards Wall Settings")) {
-		addCheckbox("readirects_wall_alternating",
-								"Target Alternating Walls",
-								"Instead of targetting wall in front of car, they alternate");
+		addCheckbox(
+			"readirects_wall_alternating", "Target Alternating Walls", "Instead of targetting nearest wall, they alternate");
 		addRangeSliderInt("wall_shotspeed", "Towards Wall Shot Speed");
 		addRangeSliderInt("wall_sideoffset", "Wall Side Offset");
 		addRangeSliderInt("wall_heightoffset", "Wall Height Offset");
 		addRangeSliderInt("wall_addedspin", "Ball Added Spin");
+
+		CVarWrapper towards_wall_amount = cvarManager->getCvar("readirects_towards_wall_amount");
+		if (!towards_wall_amount)
+			return;
+		int amt = towards_wall_amount.getIntValue();
+		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+		ImGui::SliderInt("##AmtTimesTowardsWall", &amt, 1, 10, "Amount of times ball directs towards wall in playlist: %d");
+		towards_wall_amount.setValue(amt);
 	}
 	if (settings_ids[1] == 0)
 		settings_ids[1] = ImGui::GetItemID();
@@ -158,6 +173,15 @@ void ReadirectsPlugin::RenderSettings() {
 		addRangeSliderInt("corner_sideoffset", "Corner Side Offset");
 		addRangeSliderInt("corner_heightoffset", "Corner Height Offset");
 		addRangeSliderInt("corner_addedspin", "Ball Added Spin");
+
+		CVarWrapper towards_corner_amount = cvarManager->getCvar("readirects_towards_corner_amount");
+		if (!towards_corner_amount)
+			return;
+		int amt = towards_corner_amount.getIntValue();
+		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+		ImGui::SliderInt(
+			"##AmtTimesTowardsCorner", &amt, 1, 10, "Amount of times ball directs towards corner in playlist: %d");
+		towards_corner_amount.setValue(amt);
 	}
 	if (settings_ids[2] == 0)
 		settings_ids[2] = ImGui::GetItemID();
@@ -166,6 +190,15 @@ void ReadirectsPlugin::RenderSettings() {
 		addRangeSliderInt("ceiling_sideoffset", "Ceiling Side Offset");
 		addRangeSliderInt("ceiling_heightoffset", "Ceiling Height Offset");
 		addRangeSliderInt("ceiling_addedspin", "Ball Added Spin");
+
+		CVarWrapper towards_ceiling_amount = cvarManager->getCvar("readirects_towards_ceiling_amount");
+		if (!towards_ceiling_amount)
+			return;
+		int amt = towards_ceiling_amount.getIntValue();
+		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+		ImGui::SliderInt(
+			"##AmtTimesTowardsCeiling", &amt, 1, 10, "Amount of times ball directs towards ceiling in playlist: %d");
+		towards_ceiling_amount.setValue(amt);
 	}
 	if (settings_ids[3] == 0)
 		settings_ids[3] = ImGui::GetItemID();

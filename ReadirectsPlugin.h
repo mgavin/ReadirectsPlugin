@@ -1,7 +1,7 @@
 #pragma once
 #pragma comment(lib, "pluginsdk.lib")
 #include <chrono>
-#include <list>
+#include <deque>
 #include <string>
 #include <vector>
 #include "bakkesmod/plugin/PluginSettingsWindow.h"
@@ -40,10 +40,14 @@ private:
 	void OnBallHitsGround(std::string eventName);
 	void OnGameTick(std::string eventName);
 
+	std::string next_in_playlist();
+
 	// member variables
 	int																		_launchBallTimer = 0;
 	std::chrono::system_clock::time_point _lastPoint;
-	std::vector<std::string>							playlist;
+	std::deque<std::string>								playlist;
+	// holds a copy of the playlist for execution
+	std::deque<std::string> c_playlist;
 
 	// for collapse all / expand all in the menu
 	ImGuiStorage *			 settings_storage;

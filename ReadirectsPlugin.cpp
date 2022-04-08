@@ -9,12 +9,68 @@ bool readirectsEnabled = false;
 bool gameHooked				 = false;
 
 void ReadirectsPlugin::onLoad() {
+	// Attach to an amount change to fill/drain the playlist
+	auto addOnValueChangedPlaylistFill = [this](
+																				 std::string cvarName, std::string cvarEnabler, std::string playlistValue) {
+		CVarWrapper addvccvar = cvarManager->getCvar(cvarName);
+		if (addvccvar) {
+			addvccvar.addOnValueChanged([this, &cvarEnabler, &playlistValue](std::string oldValue, CVarWrapper cvar) {
+				c_playlist.clear();
+				CVarWrapper cvarEnable = cvarManager->getCvar(cvarEnabler);
+				if (!cvarEnable)
+					return;
+				if (!cvarEnable.getBoolValue())
+					return;
+
+				int c			 = std::count(begin(playlist), end(playlist), playlistValue);
+				int newVal = cvar.getIntValue();
+				if (newVal < c) {
+					auto it = std::find(rbegin(playlist), rend(playlist), playlistValue);
+					// items exist
+					for (int i = c - newVal; i > 0 && it != rend(playlist); --i) {
+						if (it == rbegin(playlist)) {
+							playlist.erase((it + 1).base());
+						} else {
+							playlist.erase(it.base());
+						}
+						it = std::find(rbegin(playlist), rend(playlist), playlistValue);
+					}
+				} else if (newVal > c) {
+					for (int i = newVal - c; i > 0; --i) {
+						playlist.push_back(playlistValue);
+					}
+				}
+			});
+		}
+	};
+	// Attach to an enabler to refill the playlist when enabled or clear it when disabled
+	auto addOnValueChangedClearOrRefillPlaylist =
+		[this](std::string cvarEnabler, std::string cvarAmount, std::string playlistValue) {
+			CVarWrapper addvccvar = cvarManager->getCvar(cvarEnabler);
+			if (addvccvar) {
+				addvccvar.addOnValueChanged([this, &cvarAmount, &playlistValue](std::string oldValue, CVarWrapper cvar) {
+					c_playlist.clear();
+					bool				isEnabled = cvar.getBoolValue();
+					CVarWrapper amount_cv = cvarManager->getCvar(cvarAmount);
+					if (!amount_cv)
+						return;
+					if (isEnabled) {
+						// refill the playlist with amount set in the cvar
+						amount_cv.notify();
+					} else {
+						for (auto it = std::find(begin(playlist), end(playlist), playlistValue); it != end(playlist);
+								 it			 = std::find(begin(playlist), end(playlist), playlistValue)) {
+							playlist.erase(it);
+						}
+					}
+				});
+			}
+		};
+
 	// option to enable plugin
 	cvarManager->registerCvar("readirects_enabled", "0", "Enable ReadirectsPlugin", true, true, 0, true, 1)
 		.addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
 			readirectsEnabled = cvar.getBoolValue();
-			if (!gameWrapper->IsInFreeplay())
-				return;
 			if (readirectsEnabled && !gameHooked) {
 				HookGameEngine();
 			} else {
@@ -25,28 +81,21 @@ void ReadirectsPlugin::onLoad() {
 	// options for where to redirect the ball
 	cvarManager->registerCvar(
 		"readirects_towards_goal", "0", "Enable ball redirecting towards goal", false, true, 0, true, 1);
+	addOnValueChangedClearOrRefillPlaylist("readirects_towards_goal", "readirects_towards_goal_amount", "Towards Goal");
 	cvarManager->registerCvar(
 		"readirects_towards_wall", "0", "Enable ball redirecting towards wall", false, true, 0, true, 1);
+	addOnValueChangedClearOrRefillPlaylist("readirects_towards_wall", "readirects_towards_wall_amount", "Towards Wall");
 	cvarManager->registerCvar(
 		"readirects_towards_corner", "0", "Enable ball redirecting towards corner", false, true, 0, true, 1);
+	addOnValueChangedClearOrRefillPlaylist(
+		"readirects_towards_corner", "readirects_towards_corner_amount", "Towards Corner");
 	cvarManager->registerCvar(
 		"readirects_towards_ceiling", "0", "Enable ball redirecting towards ceiling", false, true, 0, true, 1);
-	cvarManager
-		->registerCvar("readirects_towards_car", "0", "Enable ball redirecting towards car", false, true, 0, true, 1)
-		.addOnValueChanged([this](std::string oldVal, CVarWrapper cvar) {
-			bool				isEnabled							= cvar.getBoolValue();
-			CVarWrapper towards_car_amount_cv = cvarManager->getCvar("readirects_towards_car_amount");
-			if (!towards_car_amount_cv)
-				return;
-			if (isEnabled) {
-				towards_car_amount_cv.notify();
-			} else {
-				for (auto it = std::find(begin(playlist), end(playlist), "Towards Car"); it != end(playlist);
-						 it			 = std::find(begin(playlist), end(playlist), "Towards Car")) {
-					playlist.erase(it);
-				}
-			}
-		});
+	addOnValueChangedClearOrRefillPlaylist(
+		"readirects_towards_ceiling", "readirects_towards_ceiling_amount", "Towards Ceiling");
+	cvarManager->registerCvar(
+		"readirects_towards_car", "0", "Enable ball redirecting towards car", false, true, 0, true, 1);
+	addOnValueChangedClearOrRefillPlaylist("readirects_towards_car", "readirects_towards_car_amount", "Towards Car");
 
 	// towards goal settings
 	cvarManager->registerCvar(
@@ -69,6 +118,15 @@ void ReadirectsPlugin::onLoad() {
 														2044);
 	cvarManager->registerCvar(
 		"readirects_goal_addedspin", "(-6, 6)", "Added spin of shot directed towards goal", false, true, -6, true, 6);
+	cvarManager->registerCvar("readirects_towards_goal_amount",
+														"1",
+														"Amount of times ball is directed towards goal in the playlist",
+														false,
+														true,
+														1,
+														true,
+														10);
+	addOnValueChangedPlaylistFill("readirects_towards_goal_amount", "readirects_towards_goal", "Towards goal");
 	cvarManager->registerCvar(
 		"readirects_goal_alternating", "0", "Target alternating goals each call", false, true, 0, true, 1);
 
@@ -93,6 +151,15 @@ void ReadirectsPlugin::onLoad() {
 														2044);
 	cvarManager->registerCvar(
 		"readirects_wall_addedspin", "(-6, 6)", "Added spin of shot directed towards wall", false, true, -6, true, 6);
+	cvarManager->registerCvar("readirects_towards_wall_amount",
+														"1",
+														"Amount of times ball is directed towards wall in the playlist",
+														false,
+														true,
+														1,
+														true,
+														10);
+	addOnValueChangedPlaylistFill("readirects_towards_wall_amount", "readirects_towards_wall", "Towards wall");
 	cvarManager->registerCvar(
 		"readirects_wall_alternating", "0", "Target alternating walls each call", false, true, 0, true, 1);
 
@@ -117,6 +184,15 @@ void ReadirectsPlugin::onLoad() {
 														2044);
 	cvarManager->registerCvar(
 		"readirects_corner_addedspin", "(-6, 6)", "Added spin of shot directed towards corner", false, true, -6, true, 6);
+	cvarManager->registerCvar("readirects_towards_corner_amount",
+														"1",
+														"Amount of times ball is directed towards ceiling in the playlist",
+														false,
+														true,
+														1,
+														true,
+														10);
+	addOnValueChangedPlaylistFill("readirects_towards_corner_amount", "readirects_towards_corner", "Towards Corner");
 
 	// towards ceiling settings
 	cvarManager->registerCvar(
@@ -139,6 +215,15 @@ void ReadirectsPlugin::onLoad() {
 														2044);
 	cvarManager->registerCvar(
 		"readirects_ceiling_addedspin", "(-6, 6)", "Added spin of shot directed towards ceiling", false, true, -6, true, 6);
+	cvarManager->registerCvar("readirects_towards_ceiling_amount",
+														"1",
+														"Amount of times ball is directed towards ceiling in the playlist",
+														false,
+														true,
+														1,
+														true,
+														10);
+	addOnValueChangedPlaylistFill("readirects_towards_ceiling_amount", "readirects_towards_ceiling", "Towards Ceiling");
 
 	// towards car settings
 	cvarManager->registerCvar(
@@ -175,41 +260,15 @@ void ReadirectsPlugin::onLoad() {
 														2044);
 	cvarManager->registerCvar(
 		"readirects_car_addedspin", "(-6, 6)", "Added spin of shot directed towards car", false, true, -6, true, 6);
-	cvarManager
-		->registerCvar("readirects_towards_car_amount",
-									 "1",
-									 "Amount of times ball is directed towards car in the playlist",
-									 false,
-									 true,
-									 1,
-									 true,
-									 10)
-		.addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
-			CVarWrapper tccvar = cvarManager->getCvar("readirects_towards_car");
-			if (!tccvar)
-				return;
-			if (!tccvar.getBoolValue())
-				return;
-
-			int c			 = std::count(begin(playlist), end(playlist), "Towards Car");
-			int newVal = cvar.getIntValue();
-			if (newVal < c) {
-				auto it = std::find(rbegin(playlist), rend(playlist), "Towards Car");
-				// items exist
-				for (int i = c - newVal; i > 0 && it != rend(playlist); --i) {
-					if (it == rbegin(playlist)) {
-						playlist.erase((it + 1).base());
-					} else {
-						playlist.erase(it.base());
-					}
-					it = std::find(rbegin(playlist), rend(playlist), "Towards Car");
-				}
-			} else if (newVal > c) {
-				for (int i = newVal - c; i > 0; --i) {
-					playlist.push_back("Towards Car");
-				}
-			}
-		});
+	cvarManager->registerCvar("readirects_towards_car_amount",
+														"1",
+														"Amount of times ball is directed towards car in the playlist",
+														false,
+														true,
+														1,
+														true,
+														10);
+	addOnValueChangedPlaylistFill("readirects_towards_car_amount", "readirects_towards_car", "Towards Car");
 
 	cvarManager->registerCvar("readirects_enable_timer", "0", "Run playlist on a timer", false, true, 0, true, 1);
 
@@ -264,10 +323,9 @@ void ReadirectsPlugin::onLoad() {
 																PERMISSION_FREEPLAY | PERMISSION_PAUSEMENU_CLOSED);
 
 	gameWrapper->HookEvent("Function TAGame.Mutator_Freeplay_TA.Init", [this](std::string eventName) {
-		CVarWrapper cv = cvarManager->getCvar("readirects_enabled");
-		if (!cv)
-			return;
-		cv.notify();
+		if (readirectsEnabled && !gameHooked) {
+			HookGameEngine();
+		}
 	});
 	gameWrapper->HookEvent("Function TAGame.FreeplayCommands_TA.HandleSoccarGameDestroyed",
 												 [this](std::string eventName) {
@@ -320,14 +378,33 @@ void ReadirectsPlugin::UnhookGameEngine() {
 	gameHooked = false;
 }
 
+std::string ReadirectsPlugin::next_in_playlist() {
+	if (playlist.empty())
+		return "";
+	if (c_playlist.empty())
+		std::copy(begin(playlist), end(playlist), std::back_inserter(c_playlist));
+
+	CVarWrapper random_playlist = cvarManager->getCvar("readirects_enable_randomizeplaylist");
+	std::string ret;
+	if (!random_playlist.getBoolValue()) {
+		ret = c_playlist.front();
+		c_playlist.pop_front();
+	} else {
+		std::size_t r	 = random(0, c_playlist.size());
+		auto				it = begin(c_playlist) + r;
+		ret						 = *it;
+		c_playlist.erase(it);
+	}
+
+	return ret;
+}
+
 void ReadirectsPlugin::LaunchBall(std::vector<std::string> params) {
 	//  main driver
-	//  not in freeplay
-	if (!gameWrapper->IsInFreeplay())
+	if (!readirectsEnabled && !gameWrapper->IsInFreeplay())
 		return;
 
 	ServerWrapper sw = gameWrapper->GetCurrentGameState();
-	// check for null
 	if (!sw)
 		return;
 
@@ -336,10 +413,10 @@ void ReadirectsPlugin::LaunchBall(std::vector<std::string> params) {
 		return;
 
 	CarWrapper player = sw.GetCars().Get(0);
-	// check for null
 	if (player.IsNull() || sw.GetBall().IsNull())
 		return;
 
+	std::string next = next_in_playlist();
 	TowardsCar(std::make_shared<ServerWrapper>(sw), std::make_shared<CarWrapper>(player));
 }
 void ReadirectsPlugin::OnCarHitsBall(std::string eventName) {
