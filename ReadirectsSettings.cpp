@@ -132,6 +132,7 @@ void ReadirectsPlugin::RenderSettings() {
 		cvar.setValue(value);
 	};
 	if (ImGui::CollapsingHeader("Towards Goal Settings")) {
+		settings_ids[0] = ImGui::GetItemID();
 		addCheckbox("readirects_goal_alternating",
 								"Target Alternating Goals",
 								"Instead of targetting goal in front of car, they alternate");
@@ -147,16 +148,18 @@ void ReadirectsPlugin::RenderSettings() {
 		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
 		ImGui::SliderInt("##AmtTimesTowardsGoal", &amt, 1, 10, "Amount of times ball directs towards goal in playlist: %d");
 		towards_goal_amount.setValue(amt);
-	}
-	if (settings_ids[0] == 0)
+	} else {
 		settings_ids[0] = ImGui::GetItemID();
+	}
+
 	if (ImGui::CollapsingHeader("Towards Wall Settings")) {
+		settings_ids[1] = ImGui::GetItemID();
 		addCheckbox(
 			"readirects_wall_alternating", "Target Alternating Walls", "Instead of targetting nearest wall, they alternate");
 		addRangeSliderInt("wall_shotspeed", "Towards Wall Shot Speed");
 		addRangeSliderInt("wall_sideoffset", "Wall Side Offset");
 		addRangeSliderInt("wall_heightoffset", "Wall Height Offset");
-		addRangeSliderInt("wall_addedspin", "Ball Added Spin");
+		addRangeSliderInt("wall_addedspin", "Wall Added Spin");
 
 		CVarWrapper towards_wall_amount = cvarManager->getCvar("readirects_towards_wall_amount");
 		if (!towards_wall_amount)
@@ -165,14 +168,16 @@ void ReadirectsPlugin::RenderSettings() {
 		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
 		ImGui::SliderInt("##AmtTimesTowardsWall", &amt, 1, 10, "Amount of times ball directs towards wall in playlist: %d");
 		towards_wall_amount.setValue(amt);
-	}
-	if (settings_ids[1] == 0)
+	} else {
 		settings_ids[1] = ImGui::GetItemID();
+	}
+
 	if (ImGui::CollapsingHeader("Towards Corner Settings")) {
+		settings_ids[2] = ImGui::GetItemID();
 		addRangeSliderInt("corner_shotspeed", "Towards Corner Shot Speed");
 		addRangeSliderInt("corner_sideoffset", "Corner Side Offset");
 		addRangeSliderInt("corner_heightoffset", "Corner Height Offset");
-		addRangeSliderInt("corner_addedspin", "Ball Added Spin");
+		addRangeSliderInt("corner_addedspin", "Corner Added Spin");
 
 		CVarWrapper towards_corner_amount = cvarManager->getCvar("readirects_towards_corner_amount");
 		if (!towards_corner_amount)
@@ -182,14 +187,16 @@ void ReadirectsPlugin::RenderSettings() {
 		ImGui::SliderInt(
 			"##AmtTimesTowardsCorner", &amt, 1, 10, "Amount of times ball directs towards corner in playlist: %d");
 		towards_corner_amount.setValue(amt);
-	}
-	if (settings_ids[2] == 0)
+	} else {
 		settings_ids[2] = ImGui::GetItemID();
+	}
+
 	if (ImGui::CollapsingHeader("Towards Ceiling Settings")) {
+		settings_ids[3] = ImGui::GetItemID();
 		addRangeSliderInt("ceiling_shotspeed", "Towards Ceiling Shot Speed");
 		addRangeSliderInt("ceiling_sideoffset", "Ceiling Side Offset");
 		addRangeSliderInt("ceiling_heightoffset", "Ceiling Height Offset");
-		addRangeSliderInt("ceiling_addedspin", "Ball Added Spin");
+		addRangeSliderInt("ceiling_addedspin", "Ceiling Added Spin");
 
 		CVarWrapper towards_ceiling_amount = cvarManager->getCvar("readirects_towards_ceiling_amount");
 		if (!towards_ceiling_amount)
@@ -199,10 +206,11 @@ void ReadirectsPlugin::RenderSettings() {
 		ImGui::SliderInt(
 			"##AmtTimesTowardsCeiling", &amt, 1, 10, "Amount of times ball directs towards ceiling in playlist: %d");
 		towards_ceiling_amount.setValue(amt);
-	}
-	if (settings_ids[3] == 0)
+	} else {
 		settings_ids[3] = ImGui::GetItemID();
+	}
 	if (ImGui::CollapsingHeader("Towards Car Settings")) {
+		settings_ids[4] = ImGui::GetItemID();
 		addCheckbox("readirects_car_pass_predict",
 								"Enable position prediction",
 								"Enables ball redirected towards your predicted position");
@@ -212,7 +220,7 @@ void ReadirectsPlugin::RenderSettings() {
 		addRangeSliderInt("car_boundoffset", "Car Bounds Offset");
 		addRangeSliderInt("car_heightoffset", "Car Height Offset");
 		addCheckbox("readirects_car_pass_on_ground", "Redirect on ground", "Enable redirecting ball towards car on ground");
-		addRangeSliderInt("car_addedspin", "Ball Added Spin");
+		addRangeSliderInt("car_addedspin", "Car Added Spin");
 
 		CVarWrapper towards_car_amount = cvarManager->getCvar("readirects_towards_car_amount");
 		if (!towards_car_amount)
@@ -221,9 +229,9 @@ void ReadirectsPlugin::RenderSettings() {
 		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
 		ImGui::SliderInt("##AmtTimesTowardsCar", &amt, 1, 10, "Amount of times ball directs towards car in playlist: %d");
 		towards_car_amount.setValue(amt);
-	}
-	if (settings_ids[4] == 0)
+	} else {
 		settings_ids[4] = ImGui::GetItemID();
+	}
 	settings_storage = ImGui::GetStateStorage();
 
 	ImGui::EndChild();

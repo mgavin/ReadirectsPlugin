@@ -340,6 +340,7 @@ void ReadirectsPlugin::onUnload() {
 	settings_storage = 0;
 	settings_ids.clear();
 	playlist.clear();
+	c_playlist.clear();
 	UnhookGameEngine();
 }
 
