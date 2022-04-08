@@ -1,9 +1,13 @@
 #pragma once
 #pragma comment(lib, "pluginsdk.lib")
 #include <chrono>
+#include <list>
+#include <string>
+#include <vector>
 #include "bakkesmod/plugin/PluginSettingsWindow.h"
 #include "bakkesmod/plugin/bakkesmodplugin.h"
 #include "bakkesmod/plugin/pluginwindow.h"
+#include "imgui.h"
 
 #include "version.h"
 constexpr auto plugin_version =
@@ -25,11 +29,11 @@ public:
 
 private:
 	// calculators / options
-	void TowardsGoal();
-	void TowardsWall();
-	void TowardsCorner();
-	void TowardsCeiling();
-	void TowardsCar();
+	void TowardsGoal(std::shared_ptr<ServerWrapper> sw, std::shared_ptr<CarWrapper> player);
+	void TowardsWall(std::shared_ptr<ServerWrapper> sw, std::shared_ptr<CarWrapper> player);
+	void TowardsCorner(std::shared_ptr<ServerWrapper> sw, std::shared_ptr<CarWrapper> player);
+	void TowardsCeiling(std::shared_ptr<ServerWrapper> sw, std::shared_ptr<CarWrapper> player);
+	void TowardsCar(std::shared_ptr<ServerWrapper> sw, std::shared_ptr<CarWrapper> player);
 
 	void OnCarHitsBall(std::string eventName);
 	void OnBallHitsWorld(std::string eventName);
@@ -39,4 +43,9 @@ private:
 	// member variables
 	int																		_launchBallTimer = 0;
 	std::chrono::system_clock::time_point _lastPoint;
+	std::vector<std::string>							playlist;
+
+	// for collapse all / expand all in the menu
+	ImGuiStorage *			 settings_storage;
+	std::vector<ImGuiID> settings_ids;
 };

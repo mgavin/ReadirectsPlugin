@@ -1,11 +1,12 @@
 
+// #include <Xinput.h>
 #include "ReadirectsPlugin.h"
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "imgui_rangeslider.h"
-
-ImGuiStorage *			 settings_storage;
-std::vector<ImGuiID> settings_ids(5);
+/*
+ * use xinput to capture controller input?
+ */
 
 static const std::vector<std::string> KEY_LIST = {"XboxTypeS_A",
 																									"XboxTypeS_B",
@@ -30,9 +31,6 @@ std::string ReadirectsPlugin::GetPluginName() {
 
 void ReadirectsPlugin::SetImGuiContext(uintptr_t ctx) {
 	ImGui::SetCurrentContext(reinterpret_cast<ImGuiContext *>(ctx));
-	ImGuiIO & io = ImGui::GetIO();
-	io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
-	io.BackendFlags |= ImGuiBackendFlags_HasGamepad;
 }
 
 void ReadirectsPlugin::RenderSettings() {
@@ -151,7 +149,7 @@ void ReadirectsPlugin::RenderSettings() {
 		addRangeSliderInt("wall_shotspeed", "Towards Wall Shot Speed");
 		addRangeSliderInt("wall_sideoffset", "Wall Side Offset");
 		addRangeSliderInt("wall_heightoffset", "Wall Height Offset");
-		addRangeSliderInt("wall_addedspin", "Wall Added Spin");
+		addRangeSliderInt("wall_addedspin", "Ball Added Spin");
 	}
 	if (settings_ids[1] == 0)
 		settings_ids[1] = ImGui::GetItemID();
@@ -159,7 +157,7 @@ void ReadirectsPlugin::RenderSettings() {
 		addRangeSliderInt("corner_shotspeed", "Towards Corner Shot Speed");
 		addRangeSliderInt("corner_sideoffset", "Corner Side Offset");
 		addRangeSliderInt("corner_heightoffset", "Corner Height Offset");
-		addRangeSliderInt("corner_addedspin", "Corner Added Spin");
+		addRangeSliderInt("corner_addedspin", "Ball Added Spin");
 	}
 	if (settings_ids[2] == 0)
 		settings_ids[2] = ImGui::GetItemID();
@@ -167,7 +165,7 @@ void ReadirectsPlugin::RenderSettings() {
 		addRangeSliderInt("ceiling_shotspeed", "Towards Ceiling Shot Speed");
 		addRangeSliderInt("ceiling_sideoffset", "Ceiling Side Offset");
 		addRangeSliderInt("ceiling_heightoffset", "Ceiling Height Offset");
-		addRangeSliderInt("ceiling_addedspin", "Ceiling Added Spin");
+		addRangeSliderInt("ceiling_addedspin", "Ball Added Spin");
 	}
 	if (settings_ids[3] == 0)
 		settings_ids[3] = ImGui::GetItemID();
@@ -181,7 +179,15 @@ void ReadirectsPlugin::RenderSettings() {
 		addRangeSliderInt("car_boundoffset", "Car Bounds Offset");
 		addRangeSliderInt("car_heightoffset", "Car Height Offset");
 		addCheckbox("readirects_car_pass_on_ground", "Redirect on ground", "Enable redirecting ball towards car on ground");
-		addRangeSliderInt("car_addedspin", "Car Added Spin");
+		addRangeSliderInt("car_addedspin", "Ball Added Spin");
+
+		CVarWrapper towards_car_amount = cvarManager->getCvar("readirects_towards_car_amount");
+		if (!towards_car_amount)
+			return;
+		int amt = towards_car_amount.getIntValue();
+		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+		ImGui::SliderInt("##AmtTimesTowardsCar", &amt, 1, 10, "Amount of times ball directs towards car in playlist: %d");
+		towards_car_amount.setValue(amt);
 	}
 	if (settings_ids[4] == 0)
 		settings_ids[4] = ImGui::GetItemID();
@@ -254,15 +260,15 @@ void ReadirectsPlugin::RenderSettings() {
 		ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y),
 		true,
 		ImGuiWindowFlags_HorizontalScrollbar);
-	static const char * items[] = {"action 1", "action 2", "action 3"};
-	for (int n = 0; n < IM_ARRAYSIZE(items); ++n) {
-		const char * item = items[n];
+
+	for (std::size_t n = 0; n < playlist.size(); ++n) {
+		const char * item = playlist.at(n).c_str();
 		ImGui::Selectable(item);
 		if (ImGui::IsItemActive() && !ImGui::IsItemHovered()) {
 			int n_next = n + (ImGui::GetMouseDragDelta(0).y < 0.f ? -1 : 1);
-			if (n_next >= 0 && n_next < IM_ARRAYSIZE(items)) {
-				items[n]			= items[n_next];
-				items[n_next] = item;
+			if (n_next >= 0 && n_next < playlist.size()) {
+				playlist[n]			 = playlist[n_next];
+				playlist[n_next] = item;
 				ImGui::ResetMouseDragDelta();
 			}
 		}
