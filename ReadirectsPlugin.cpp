@@ -14,7 +14,7 @@ void ReadirectsPlugin::onLoad() {
 																				 std::string cvarName, std::string cvarEnabler, std::string playlistValue) {
 		CVarWrapper addvccvar = cvarManager->getCvar(cvarName);
 		if (addvccvar) {
-			addvccvar.addOnValueChanged([this, &cvarEnabler, &playlistValue](std::string oldValue, CVarWrapper cvar) {
+			addvccvar.addOnValueChanged([this, cvarEnabler, playlistValue](std::string oldValue, CVarWrapper cvar) {
 				c_playlist.clear();
 				CVarWrapper cvarEnable = cvarManager->getCvar(cvarEnabler);
 				if (!cvarEnable)
@@ -48,7 +48,7 @@ void ReadirectsPlugin::onLoad() {
 		[this](std::string cvarEnabler, std::string cvarAmount, std::string playlistValue) {
 			CVarWrapper addvccvar = cvarManager->getCvar(cvarEnabler);
 			if (addvccvar) {
-				addvccvar.addOnValueChanged([this, &cvarAmount, &playlistValue](std::string oldValue, CVarWrapper cvar) {
+				addvccvar.addOnValueChanged([this, cvarAmount, playlistValue](std::string oldValue, CVarWrapper cvar) {
 					c_playlist.clear();
 					bool				isEnabled = cvar.getBoolValue();
 					CVarWrapper amount_cv = cvarManager->getCvar(cvarAmount);
@@ -126,7 +126,7 @@ void ReadirectsPlugin::onLoad() {
 														1,
 														true,
 														10);
-	addOnValueChangedPlaylistFill("readirects_towards_goal_amount", "readirects_towards_goal", "Towards goal");
+	addOnValueChangedPlaylistFill("readirects_towards_goal_amount", "readirects_towards_goal", "Towards Goal");
 	cvarManager->registerCvar(
 		"readirects_goal_alternating", "0", "Target alternating goals each call", false, true, 0, true, 1);
 
@@ -159,7 +159,7 @@ void ReadirectsPlugin::onLoad() {
 														1,
 														true,
 														10);
-	addOnValueChangedPlaylistFill("readirects_towards_wall_amount", "readirects_towards_wall", "Towards wall");
+	addOnValueChangedPlaylistFill("readirects_towards_wall_amount", "readirects_towards_wall", "Towards Wall");
 	cvarManager->registerCvar(
 		"readirects_wall_alternating", "0", "Target alternating walls each call", false, true, 0, true, 1);
 
