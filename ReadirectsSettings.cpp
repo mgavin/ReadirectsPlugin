@@ -1,29 +1,8 @@
-
-// #include <Xinput.h>
 #include "ReadirectsPlugin.h"
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "imgui_rangeslider.h"
-/*
- * use xinput to capture controller input?
- */
-
-static const std::vector<std::string> KEY_LIST = {"XboxTypeS_A",
-                                                  "XboxTypeS_B",
-                                                  "XboxTypeS_X",
-                                                  "XboxTypeS_Y",
-                                                  "XboxTypeS_RightShoulder",
-                                                  "XboxTypeS_RightTrigger",
-                                                  "XboxTypeS_RightThumbStick",
-                                                  "XboxTypeS_LeftShoulder",
-                                                  "XboxTypeS_LeftTrigger",
-                                                  "XboxTypeS_LeftThumbStick",
-                                                  "XboxTypeS_Start",
-                                                  "XboxTypeS_Back",
-                                                  "XboxTypeS_DPad_Up",
-                                                  "XboxTypeS_DPad_Left",
-                                                  "XboxTypeS_DPad_Right",
-                                                  "XboxTypeS_DPad_Down"};
+#include "utils/parser.h"
 
 std::string ReadirectsPlugin::GetPluginName() {
   return "Readirects Plugin";
@@ -39,12 +18,10 @@ void ReadirectsPlugin::RenderSettings() {
     CVarWrapper cvar = cvarManager->getCvar(cvarName);
     if (!cvar)
       return;
-
     bool enabled = cvar.getBoolValue();
     if (ImGui::Checkbox(chkboxText, &enabled)) {
       cvar.setValue(enabled);
     }
-
     if (ImGui::IsItemHovered()) {
       ImGui::SetTooltip(tooltip);
     }
@@ -283,10 +260,51 @@ void ReadirectsPlugin::RenderSettings() {
   if (!btn)
     return;
   char btnBoundText[300];
-  std::snprintf(btnBoundText, 200, "%s (bind readirects_shoot in bindings)", btn.getStringValue().c_str());
-  if (ImGui::Button(btnBoundText, ImVec2(ImGui::GetContentRegionAvail().x - 50, 20))) {
+  std::snprintf(btnBoundText, 300, "%s (bind readirects_shoot in bindings)", btn.getStringValue().c_str());
+  if (ImGui::Button(btnBoundText, ImVec2(ImGui::GetContentRegionAvail().x - 50, 20)))
+    ;
+  /*&&
+    (controller_thread == nullptr)) {
+  btn.setValue("");
+  controller_thread = new std::thread([this, &btn]() {
+    const std::vector<std::string> KEY_LIST = {"XboxTypeS_A",
+                                               "XboxTypeS_B",
+                                               "XboxTypeS_X",
+                                               "XboxTypeS_Y",
+                                               "XboxTypeS_RightShoulder",
+                                               "XboxTypeS_RightTrigger",
+                                               "XboxTypeS_RightThumbStick",
+                                               "XboxTypeS_LeftShoulder",
+                                               "XboxTypeS_LeftTrigger",
+                                               "XboxTypeS_LeftThumbStick",
+                                               "XboxTypeS_Start",
+                                               "XboxTypeS_Back",
+                                               "XboxTypeS_DPad_Up",
+                                               "XboxTypeS_DPad_Left",
+                                               "XboxTypeS_DPad_Right",
+                                               "XboxTypeS_DPad_Down"};
+    while (btn.getStringValue().empty()) {
+      for (auto key : KEY_LIST) {
+        if (gameWrapper->IsKeyPressed(gameWrapper->GetFNameIndexByString(key))) {
+          btn.setValue(key);
+          break;
+        }
+      }
+    }
+  });
+  ImGui::OpenPopup("ReadirectsKeybindChange");
+}
+ImVec2 windowpos  = ImGui::GetWindowPos();
+ImVec2 windowsize = ImGui::GetWindowSize();
+ImGui::SetNextWindowPos(
+  ImVec2(windowpos.x, windowpos.y + windowsize.y * 0.5f), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+if (ImGui::BeginPopupModal("ReadirectsKeybindChange", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+  ImGui::Text("Press any key to bind to...");
+  while (!controller_thread->joinable()) {
   }
-
+  delete controller_thread;
+  controller_thread = nullptr;
+}*/
   ImGui::Spacing();
   ImGui::Spacing();
   ImGui::AlignTextToFramePadding();

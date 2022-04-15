@@ -43,11 +43,20 @@ private:
   std::string next_in_playlist();
 
   // member variables
-  int                                   _launchBallTimer = 0;
-  std::chrono::system_clock::time_point _lastPoint;
-  std::deque<std::string>               playlist;
-  // holds a copy of the playlist for execution
-  std::deque<std::string> c_playlist;
+  bool pluginIsEnabled = false;
+  bool gameHooked      = false;
+
+  // series of commands to where to launch the ball
+  std::deque<std::string> playlist;
+  // holds a copy of the playlist for customized execution
+  std::deque<std::string> playlist_cpy;
+
+  // counts for different methods of signifying when to launch
+  std::chrono::system_clock::time_point lastTimePoint;
+  int                                   launchBallTimer   = 0;
+  int                                   numGroundHitsBall = 0;
+  int                                   numWorldHitsBall  = 0;
+  int                                   numCarHitsBall    = 0;
 
   // for collapse all / expand all in the menu
   ImGuiStorage *       settings_storage;
